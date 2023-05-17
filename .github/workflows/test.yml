@@ -1,4 +1,4 @@
-name: Scala CI
+name: Test
 
 on:
   workflow_dispatch:
@@ -12,16 +12,11 @@ permissions:
 
 jobs:
   build:
-
     runs-on: self-hosted
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: 'sbt'
+    - name: Checkout Project
+      uses: actions/checkout@v3
+    - name: Setup Scala
+      uses: olafurpg/setup-scala@v13
     - name: Run tests
       run: sbt test
