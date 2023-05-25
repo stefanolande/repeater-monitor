@@ -13,18 +13,6 @@ jobs:
     - name: Checkout Project
       uses: actions/checkout@v3
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: 'sbt'
-
-    - name: Build JAR
-      run: |
-        sbt assembly
-        mv target/scala-3.2.2/repeater-monitor.jar .
-
     - name: Log in to Docker Hub
       uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
       with:
