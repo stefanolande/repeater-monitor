@@ -1,6 +1,6 @@
 package routes
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
 import munit.CatsEffectSuite
 import org.http4s.implicits.uri
 import org.http4s.{Method, Request, Status}
@@ -14,16 +14,28 @@ import scala.concurrent.duration.*
 
 class CommandsRoutesSpec extends CatsEffectSuite {
 
-  private val socket          = new DatagramSocket(1234, InetAddress.getLocalHost)
-  private val commandsService = new CommandsService(InetAddress.getLocalHost, 1236, socket, 100.millis)
-  private val commandsRoutes  = CommandsRoutes.routes(commandsService).orNotFound
-  private val request         = Request[IO](Method.POST, uri"/commands/set-rtc")
+  private def getResponseAndSocket = {
+    val socket          = new DatagramSocket(1234, InetAddress.getLocalHost)
+    val socketResource  = Resource.fromAutoCloseable(IO(socket))
+    val commandsService = new CommandsService(socketResource, InetAddress.getLocalHost, 1236, 100.millis)
+    val commandsRoutes  = CommandsRoutes.routes(commandsService).orNotFound
+    val request         = Request[IO](Method.POST, uri"/commands/set-rtc")
+    (commandsRoutes.run(request), socket)
+  }
+
+  private val NACKkDatagram = {
+    val bytes = Array('N'.byteValue())
+    new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
+  }
+
+  private val ACKDatagram = {
+    val bytes = Array('A'.byteValue())
+    new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
+  }
 
   test("set-rtc route should report timeout reaching the monitoring system") {
-    val responseIO = commandsRoutes.run(request)
-
     for {
-      response <- responseIO
+      response <- getResponseAndSocket._1
       body     <- bodyToString(response.body)
       _ = assertEquals(response.status, Status.Ok)
       _ = assertEquals(body, "no remote response")
@@ -31,14 +43,11 @@ class CommandsRoutesSpec extends CatsEffectSuite {
   }
 
   test("set-rtc route should report NACK the monitoring system") {
-    val responseIO = commandsRoutes.run(request)
 
-    val bytes  = Array('N'.byteValue())
-    val packet = new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
-
+    val responseIOAndSocket = getResponseAndSocket
     for {
-      _        <- IO.blocking(socket.send(packet))
-      response <- responseIO
+      _        <- IO.blocking(responseIOAndSocket._2.send(NACKkDatagram))
+      response <- responseIOAndSocket._1
       body     <- bodyToString(response.body)
       _ = assertEquals(response.status, Status.Ok)
       _ = assertEquals(body, "not executed")
@@ -46,14 +55,10 @@ class CommandsRoutesSpec extends CatsEffectSuite {
   }
 
   test("set-rtc route should report ACK the monitoring system") {
-    val responseIO = commandsRoutes.run(request)
-
-    val bytes  = Array('A'.byteValue())
-    val packet = new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
-
+    val responseIOAndSocket = getResponseAndSocket
     for {
-      _        <- IO.blocking(socket.send(packet))
-      response <- responseIO
+      _        <- IO.blocking(responseIOAndSocket._2.send(ACKDatagram))
+      response <- responseIOAndSocket._1
       body     <- bodyToString(response.body)
       _ = assertEquals(response.status, Status.Ok)
       _ = assertEquals(body, "executed")

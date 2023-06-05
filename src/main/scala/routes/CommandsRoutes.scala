@@ -1,11 +1,15 @@
 package routes
 
 import cats.effect.IO
+import model.Voltages
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import services.CommandsService
+import io.circe.generic.auto._
+import io.circe.syntax._
+import org.http4s.circe.CirceEntityDecoder._
 
 import java.net.SocketTimeoutException
 
@@ -22,8 +26,12 @@ object CommandsRoutes {
         commandsService.setRtc.attempt.flatMap(toResponseCode)
 
       case req @ POST -> Root / "commands" / "set-voltages" =>
-        logger.debug("received set-voltages") >>
-        commandsService.setVoltages.attempt.flatMap(toResponseCode)
+        for {
+          voltages <- req.as[Voltages]
+          _        <- logger.debug("received set-voltages")
+          resOrErr <- commandsService.setVoltages(voltages).attempt
+          res      <- toResponseCode(resOrErr)
+        } yield res
     }
 
   private def toResponseCode(status: Either[Throwable, Boolean]) = status match {

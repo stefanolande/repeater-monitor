@@ -1,47 +1,48 @@
 package services
 
-import cats.effect.IO
+import cats.effect.{IO, Resource}
+import model.Voltages
+import Utils.*
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, Socket}
 import java.nio.ByteBuffer
 import concurrent.duration.{DurationInt, FiniteDuration}
 
-class CommandsService(arduinoAddress: InetAddress, arduinoPort: Int, arduinoSocket: DatagramSocket, timeout: FiniteDuration) {
+class CommandsService(socketResource: Resource[IO, DatagramSocket], arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration) {
 
-  private val handleAck = {
+  private def handleAck(arduinoSocket: DatagramSocket) = {
     val responsePacket = new DatagramPacket(new Array[Byte](128), 10)
     for {
       _   <- IO(arduinoSocket.setSoTimeout(timeout.toMillis.asInstanceOf[Int]))
       _   <- IO.blocking(arduinoSocket.receive(responsePacket))
       _   <- IO(arduinoSocket.setSoTimeout(0))
-      res <- IO(responsePacket.getData.apply(0) == 'A')
+      res <- IO(responsePacket.getData.array(0) == 'A')
     } yield res
   }
 
-  def timeToRTCCommandPacket(timestamp: Long): DatagramPacket = {
+  private def timeToRTCCommandPacket(timestamp: Long): DatagramPacket = {
     val intTimestamp: Int = (timestamp / 1000).asInstanceOf[Int]
 
-    val buf =
-      Array(SetRTC.getCode, intTimestamp & 0xff, (intTimestamp >> 8) & 0xff, (intTimestamp >> 16) & 0xff, (intTimestamp >> 24) & 0xff).map(_.toByte)
+    val buf = Array(SetRTC.getCode.toByte) ++ intTimestamp.asBytes
     new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)
   }
 
   val setRtc: IO[Boolean] =
-    for {
-      timestamp <- IO(System.currentTimeMillis)
-      packet    <- IO(timeToRTCCommandPacket(timestamp))
-      _         <- IO.blocking(arduinoSocket.send(packet))
-      res       <- handleAck
-    } yield res
+    socketResource.use { arduinoSocket =>
+      for {
+        timestamp <- IO(System.currentTimeMillis)
+        packet    <- IO(timeToRTCCommandPacket(timestamp))
+        _         <- IO.blocking(arduinoSocket.send(packet))
+        res       <- handleAck(arduinoSocket)
+      } yield res
+    }
+  def setVoltages(voltages: Voltages): IO[Boolean] =
+    socketResource.use { arduinoSocket =>
+      val buf    = Array(SetVoltages.getCode.toByte) ++ voltages.offVoltage.asBytes ++ voltages.onVoltage.asBytes
+      val packet = new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)
 
-  val setVoltages: IO[Boolean] = {
-    val buf =
-      Array(SetVoltages.getCode, 0x04, 0x29, 0x00, 0x32).map(_.toByte)
-    val packet = new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)
-
-    IO.blocking(arduinoSocket.send(packet)) >> handleAck
-  }
-
+      IO.blocking(arduinoSocket.send(packet)) >> handleAck(arduinoSocket)
+    }
 }
 
 sealed trait Command(code: Char) {

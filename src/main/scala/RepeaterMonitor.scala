@@ -19,18 +19,15 @@ object RepeaterMonitor extends IOApp {
 
   private val arduinoSocketResource = Resource.fromAutoCloseable(IO(new DatagramSocket()))
 
-  def run(args: List[String]): IO[ExitCode] =
-    arduinoSocketResource.use { arduinoSocket =>
+  def run(args: List[String]): IO[ExitCode] = {
+    val commandService = new CommandsService(arduinoSocketResource, InetAddress.getByName("172.29.10.66"), 8888, 5.seconds)
+    val httpApp        = makeHttpApp(commandService)
 
-      val commandService = new CommandsService(InetAddress.getByName("172.29.10.66"), 8888, arduinoSocket, 5.seconds)
-      val httpApp        = makeHttpApp(commandService)
-
-      server(httpApp).use(server =>
-        logger.info(s"bound to port ${arduinoSocket.getLocalPort}") >>
-          IO.delay(println(s"Server Has Started at ${server.address}")) >>
-          IO.never.as(ExitCode.Success)
-      )
-    }
+    server(httpApp).use(server =>
+      IO.delay(println(s"Server Has Started at ${server.address}")) >>
+        IO.never.as(ExitCode.Success)
+    )
+  }
 
   def makeHttpApp(commandService: CommandsService): HttpApp[IO] = {
     val dsl = new Http4sDsl[IO] {}

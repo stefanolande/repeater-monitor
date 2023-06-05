@@ -12,6 +12,7 @@ lazy val root = project
 val http4sVersion          = "0.23.19"
 val logbackVersion         = "1.4.6"
 val munitCatsEffectVersion = "2.0.0-M3"
+val circeVersion           = "0.14.5"
 
 libraryDependencies ++= Seq(
   "org.scalameta" %% "munit" % "0.7.29" % Test,
@@ -19,7 +20,9 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-ember-server" % http4sVersion,
   "org.http4s" %% "http4s-dsl" % http4sVersion,
   "ch.qos.logback" % "logback-classic" % logbackVersion,
-  "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % "test"
+  "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % "test",
+  "org.http4s" %% "http4s-circe" % http4sVersion,
+  "io.circe" %% "circe-generic" % circeVersion
 )
 
 //ThisBuild / assemblyMergeStrategy := {
