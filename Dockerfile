@@ -3,7 +3,7 @@ COPY . /repeater-monitor
 WORKDIR /repeater-monitor
 RUN sbt assembly
 
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:20.0.1_9-jdk
 WORKDIR .
 COPY --from=build repeater-monitor/target/scala-3.2.2/repeater-monitor.jar .
 EXPOSE 8080
