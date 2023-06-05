@@ -38,7 +38,7 @@ object RepeaterMonitor extends IOApp {
     )
   }
 
-  def makeHttpApp(commandService: CommandsService): HttpApp[IO] = {
+  private def makeHttpApp(commandService: CommandsService): HttpApp[IO] = {
     val dsl = new Http4sDsl[IO] {}
     import dsl.*
 
@@ -46,7 +46,7 @@ object RepeaterMonitor extends IOApp {
     routes.orNotFound
   }
 
-  def server(httpApp: HttpApp[IO]) = {
+  private def server(httpApp: HttpApp[IO]) = {
     val host = host"0.0.0.0"
     val port = port"8080"
 
