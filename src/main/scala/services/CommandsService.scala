@@ -2,7 +2,7 @@ package services
 
 import cats.effect.{IO, Resource}
 import model.Voltages
-import Utils.*
+import Conversions.*
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, Socket}
 import java.nio.ByteBuffer
