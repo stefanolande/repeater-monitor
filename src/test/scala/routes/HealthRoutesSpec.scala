@@ -5,7 +5,7 @@ import munit.CatsEffectSuite
 import org.http4s.implicits.uri
 import org.http4s.{Method, Request, Status}
 import routes.HealthRoutes
-import utils.TestUtils.bodyToString
+import utils.Utils.bodyToString
 
 import java.nio.charset.Charset
 

@@ -1,15 +1,18 @@
 package routes
 
 import cats.effect.IO
+import io.circe.generic.auto.*
+import io.circe.syntax.*
+import model.MonitorResponseStatus.*
 import model.Voltages
 import org.http4s.HttpRoutes
+import org.http4s.circe.CirceEntityDecoder.*
+import org.http4s.circe.jsonEncoder
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import services.CommandsService
-import io.circe.generic.auto._
-import io.circe.syntax._
-import org.http4s.circe.CirceEntityDecoder._
+import model.CommandResponse.toResponse
 
 import java.net.SocketTimeoutException
 
@@ -21,24 +24,20 @@ object CommandsRoutes {
 
   def routes(commandsService: CommandsService): HttpRoutes[IO] = HttpRoutes
     .of[IO] {
-      case POST -> Root / "commands" / "set-rtc" =>
-        logger.debug("received set-rtc") >>
-        commandsService.setRtc.attempt.flatMap(toResponseCode)
+      case POST -> Root / "commands" / "rtc" =>
+        val payloadIO = for {
+          _   <- logger.debug("received set-rtc")
+          res <- commandsService.setRtc
+        } yield res.toResponse.asJson
+        Ok(payloadIO)
 
-      case req @ POST -> Root / "commands" / "set-voltages" =>
-        for {
+      case req @ POST -> Root / "commands" / "voltages" =>
+        val payloadIO = for {
           voltages <- req.as[Voltages]
           _        <- logger.debug("received set-voltages")
-          resOrErr <- commandsService.setVoltages(voltages).attempt
-          res      <- toResponseCode(resOrErr)
-        } yield res
+          res      <- commandsService.setVoltages(voltages)
+        } yield res.toResponse.asJson
+        Ok(payloadIO)
     }
-
-  private def toResponseCode(status: Either[Throwable, Boolean]) = status match {
-    case Right(true)                     => Ok("executed")
-    case Right(false)                    => Ok("not executed")
-    case Left(_: SocketTimeoutException) => Ok("no remote response")
-    case Left(exception)                 => InternalServerError(exception.getMessage)
-  }
 
 }
