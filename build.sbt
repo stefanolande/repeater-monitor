@@ -53,3 +53,5 @@ ThisBuild / assemblyMergeStrategy := {
     val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
     oldStrategy(x)
 }
+
+fork := true
