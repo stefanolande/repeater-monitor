@@ -8,23 +8,20 @@ import cats.effect.MonadCancelThrow
 import cats.syntax.all.*
 import com.comcast.ip4s.*
 import model.APRSTelemetry
-import model.configuration.APRSConfiguration
+import model.configuration.{APRSConfiguration, Station}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import concurrent.duration.DurationInt
 
-object APRSService extends IOApp.Simple {
+object APRSService {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  override def run: IO[Unit] =
-    runClient("IS0EIR", host"rotate.aprs.net", port"14580", "IR0UBN")
+  def run(aprsConf: APRSConfiguration): IO[Unit] =
+    aprsConf.stations.map(station => runClient(aprsConf.connectionCallsign, aprsConf.hostname, aprsConf.port, station)).parSequence_
 
-  def make(aprsConf: APRSConfiguration) =
-    aprsConf.stations.map(station => runClient(aprsConf.connectionCallsign, aprsConf.hostname, aprsConf.port, station.callsign)).parSequence_
-
-  def passcode(callsign: String): Int = {
+  private def passcode(callsign: String): Int = {
     val callsignPrefix = callsign.split('-')(0).toUpperCase()
     val initialCode    = 0x73e2
     val code = callsignPrefix.zipWithIndex.foldLeft(initialCode) { case (acc, (char, i)) =>
@@ -73,13 +70,13 @@ object APRSService extends IOApp.Simple {
       else IO.raiseError(LoginFailed)
     )
 
-  private def runClient(connectionCallsign: String, host: Hostname, port: Port, stationCallsign: String): IO[Unit] =
+  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station): IO[Unit] =
     Network[IO]
       .client(SocketAddress(host, port))
-      .onFinalize(logger.info(s"Releasing APRS-IS socket for $stationCallsign"))
+      .onFinalize(logger.info(s"Releasing APRS-IS socket for ${station.callsign}"))
       .use { socket =>
         validateResponse(socket)
-        >> sendLogin(connectionCallsign, stationCallsign, socket)
+        >> sendLogin(connectionCallsign, station.callsign, socket)
         >> validateLogin(socket)
         >> readForever(socket) { message =>
           APRSTelemetry.parse(message) match
@@ -92,6 +89,6 @@ object APRSService extends IOApp.Simple {
         case e =>
           logger.error(s"Error ${e.getMessage}, waiting") >>
           IO.sleep(10.seconds)
-          >> runClient(connectionCallsign, host, port, stationCallsign)
+          >> runClient(connectionCallsign, host, port, station)
       }
 }

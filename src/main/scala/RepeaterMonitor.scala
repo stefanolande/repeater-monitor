@@ -33,7 +33,7 @@ object RepeaterMonitor extends IOApp {
     )
     val httpApp = makeHttpApp(commandService)
 
-    APRSService.make(conf.aprs) &>
+    APRSService.run(conf.aprs) &>
     server(httpApp).use(server =>
       logger.info(s"Server Has Started at ${server.address}") >>
         IO.never.as(ExitCode.Success)
