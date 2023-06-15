@@ -2,6 +2,7 @@ import cats.data.Kleisli
 import cats.effect.*
 import cats.implicits.{showInterpolator, toSemigroupKOps}
 import com.comcast.ip4s.{host, port}
+import model.configuration.Configuration
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.{HttpApp, HttpRoutes, Request, Response}
@@ -9,7 +10,7 @@ import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import routes.{CommandsRoutes, HealthRoutes}
-import services.CommandsService
+import services.{APRSService, CommandsService}
 
 import java.net.{DatagramSocket, InetAddress}
 import scala.concurrent.duration.*
@@ -26,12 +27,13 @@ object RepeaterMonitor extends IOApp {
   def run(args: List[String]): IO[ExitCode] = configIO.flatMap { conf =>
     val commandService = new CommandsService(
       arduinoSocketResource,
-      InetAddress.getByName(conf.service.arduinoIp),
-      conf.service.arduinoPort,
-      conf.service.responseTimeout.seconds
+      InetAddress.getByName(conf.arduinoIp),
+      conf.arduinoPort,
+      conf.responseTimeout.seconds
     )
     val httpApp = makeHttpApp(commandService)
 
+    APRSService.make(conf.aprs) &>
     server(httpApp).use(server =>
       logger.info(s"Server Has Started at ${server.address}") >>
         IO.never.as(ExitCode.Success)

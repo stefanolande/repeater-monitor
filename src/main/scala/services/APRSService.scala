@@ -5,16 +5,24 @@ import cats.effect.{IO, IOApp}
 import fs2.{text, Chunk, Stream}
 import fs2.io.net.{Network, Socket}
 import cats.effect.MonadCancelThrow
-import cats.effect.std.Console
 import cats.syntax.all.*
 import com.comcast.ip4s.*
 import model.APRSTelemetry
+import model.configuration.APRSConfiguration
+import org.typelevel.log4cats.StructuredLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import concurrent.duration.DurationInt
 
 object APRSService extends IOApp.Simple {
+
+  private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
+
   override def run: IO[Unit] =
-    client.compile.drain
+    runClient("IS0EIR", host"rotate.aprs.net", port"14580", "IR0UBN")
+
+  def make(aprsConf: APRSConfiguration) =
+    aprsConf.stations.map(station => runClient(aprsConf.connectionCallsign, aprsConf.hostname, aprsConf.port, station.callsign)).parSequence_
 
   def passcode(callsign: String): Int = {
     val callsignPrefix = callsign.split('-')(0).toUpperCase()
@@ -26,59 +34,64 @@ object APRSService extends IOApp.Simple {
     code & 0x7fff
   }
 
-  private def sendLogin(callsign: String, socket: Socket[IO]) =
-    Stream(s"user $callsign pass ${passcode(callsign)} vers aprs-scala 0.0.1 filter p/IR0UBN\n")
-      .evalTap(v => Console[IO].print(s"sending $v"))
+  private def sendLogin(callsign: String, stationCallsign: String, socket: Socket[IO]): IO[Unit] =
+    Stream(s"user $callsign pass ${passcode(callsign)} vers aprs-scala 0.0.1 filter p/$stationCallsign\n")
+      .evalTap(v => logger.debug(s"sending $v".trim))
       .through(text.utf8.encode)
       .through(socket.writes)
+      .compile
+      .drain
 
-  case object LoginFailed extends RuntimeException("connection failed")
+  private case object LoginFailed extends RuntimeException("connection failed")
 
-  def readOne(socket: Socket[IO])(f: String => IO[Unit]) = socket.reads
-    .through(text.utf8.decode)
-    .take(1)
-    .foreach(response => f(response))
+  private def readOne(socket: Socket[IO])(f: String => IO[Unit]): IO[Unit] =
+    socket.reads
+      .through(text.utf8.decode)
+      .take(1)
+      .compile
+      .lastOrError
+      .flatMap(response => f(response))
 
-  def readForever(socket: Socket[IO])(f: String => IO[Unit]) = socket.reads
-    .through(text.utf8.decode)
-    .foreach(response => f(response))
+  private def readForever(socket: Socket[IO])(f: String => IO[Unit]): IO[Nothing] =
+    socket.reads
+      .through(text.utf8.decode)
+      .foreach(response => f(response))
+      .compile
+      .lastOrError
 
-  private def validateResponse(socket: Socket[IO]) =
+  private def validateResponse(socket: Socket[IO]): IO[Unit] =
     readOne(socket)(response =>
       if (response.startsWith("#"))
-        Console[IO].print(s"Response: $response")
-      else IO.raiseError(new RuntimeException(s"Invalid server response: $response"))
+        logger.debug(s"Response: $response".trim)
+      else IO.raiseError(new RuntimeException(s"Invalid server response: $response".trim))
     )
 
   private def validateLogin(socket: Socket[IO]) =
     readOne(socket)(response =>
       if (!response.contains("unverified"))
-        Console[IO].print(s"Login OK - $response")
+        logger.info(s"Login OK - $response".trim)
       else IO.raiseError(LoginFailed)
     )
 
-  val host = host"rotate.aprs.net"
-//  val host = host"localhost"
-
-  def client: Stream[IO, Unit] =
-    Stream
-      .resource(Network[IO].client(SocketAddress(host, port"14580")))
-      .flatMap { socket =>
+  private def runClient(connectionCallsign: String, host: Hostname, port: Port, stationCallsign: String): IO[Unit] =
+    Network[IO]
+      .client(SocketAddress(host, port))
+      .onFinalize(logger.info(s"Releasing APRS-IS socket for $stationCallsign"))
+      .use { socket =>
         validateResponse(socket)
-        ++ sendLogin("IS0EIR", socket)
-        ++ validateLogin(socket)
-        ++ readForever(socket) { message =>
+        >> sendLogin(connectionCallsign, stationCallsign, socket)
+        >> validateLogin(socket)
+        >> readForever(socket) { message =>
           APRSTelemetry.parse(message) match
-            case Some(t) => Console[IO].println(s"Got telemetry: $t")
-            case None    => Console[IO].print(s"Got message: $message")
+            case Some(t) => logger.debug(s"Got telemetry: $t".trim)
+            case None    => logger.debug(s"Got message: $message".trim)
         }
       }
       .handleErrorWith {
-        case LoginFailed => Stream.eval(Console[IO].println(s"Login failed, exiting"))
+        case LoginFailed => logger.error(s"Login failed, exiting")
         case e =>
-          Stream.eval(
-            Console[IO].println(s"Error ${e.getMessage}, waiting") >>
-              IO.sleep(10.seconds)
-          ) >> client
+          logger.error(s"Error ${e.getMessage}, waiting") >>
+          IO.sleep(10.seconds)
+          >> runClient(connectionCallsign, host, port, stationCallsign)
       }
 }

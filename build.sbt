@@ -13,7 +13,7 @@ val http4sVersion          = "0.23.19"
 val logbackVersion         = "1.4.6"
 val munitCatsEffectVersion = "2.0.0-M3"
 val circeVersion           = "0.14.5"
-val pureconfigVersion      = "0.17.2"
+val pureconfigVersion      = "0.17.4"
 
 libraryDependencies ++= Seq(
   "org.scalameta" %% "munit" % "0.7.29" % Test,
@@ -27,16 +27,6 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser" % circeVersion,
   "com.github.pureconfig" %% "pureconfig-core" % pureconfigVersion
 )
-
-//ThisBuild / assemblyMergeStrategy := {
-//  case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
-//  case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
-//  case "application.conf"                            => MergeStrategy.concat
-//  case "unwanted.txt"                                => MergeStrategy.discard
-//  case x =>
-//    val oldStrategy = (ThisBuild / assemblyMergeStrategy).value
-//    oldStrategy(x)
-//}
 
 ThisBuild / assemblyMergeStrategy := {
   case PathList("javax", "activation", _*)          => MergeStrategy.first
