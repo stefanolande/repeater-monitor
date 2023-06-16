@@ -15,7 +15,7 @@ class InfluxService(influxWriteAPI: WriteApi) {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  def save(stationName: String, panelsVoltage: Double, batteryVoltage: Double): IO[Unit] =
+  def save(stationName: String, panelsVoltage: Double, batteryVoltage: Double, aprsPath: String): IO[Unit] =
     for {
       point <- IO(
         Point
@@ -23,6 +23,7 @@ class InfluxService(influxWriteAPI: WriteApi) {
           .addTag("repeater", stationName)
           .addField("panels", panelsVoltage)
           .addField("battery", batteryVoltage)
+          .addField("aprs-path", aprsPath)
           .time(Instant.now().toEpochMilli, WritePrecision.MS)
       )
       _ <- logger.debug(s"saving voltages $panelsVoltage and $batteryVoltage to influx")

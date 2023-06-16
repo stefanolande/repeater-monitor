@@ -85,7 +85,7 @@ object APRSService {
               (for {
                 panelsVoltage  <- t.values.get(station.panelsIndex)
                 batteryVoltage <- t.values.get(station.batteryIndex)
-                res = influxService.save(station.callsign, panelsVoltage, batteryVoltage)
+                res = influxService.save(station.callsign, panelsVoltage, batteryVoltage, t.path)
               } yield res).getOrElse(IO.unit)
             case None => logger.debug(s"Got message: $message".trim)
         }
