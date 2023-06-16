@@ -8,5 +8,6 @@ case class Configuration(
     arduinoPort: Int,
     arduinoIp: String,
     responseTimeout: Int,
-    aprs: APRSConfiguration
+    aprs: APRSConfiguration,
+    influx: InfluxConfiguration
 ) derives ConfigReader

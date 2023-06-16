@@ -18,8 +18,8 @@ object APRSService {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  def run(aprsConf: APRSConfiguration): IO[Unit] =
-    aprsConf.stations.map(station => runClient(aprsConf.connectionCallsign, aprsConf.hostname, aprsConf.port, station)).parSequence_
+  def run(aprsConf: APRSConfiguration, influxService: InfluxService): IO[Unit] =
+    aprsConf.stations.map(station => runClient(aprsConf.connectionCallsign, aprsConf.hostname, aprsConf.port, station, influxService)).parSequence_
 
   private def passcode(callsign: String): Int = {
     val callsignPrefix = callsign.split('-')(0).toUpperCase()
@@ -70,7 +70,7 @@ object APRSService {
       else IO.raiseError(LoginFailed)
     )
 
-  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station): IO[Unit] =
+  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station, influxService: InfluxService): IO[Unit] =
     Network[IO]
       .client(SocketAddress(host, port))
       .onFinalize(logger.info(s"Releasing APRS-IS socket for ${station.callsign}"))
@@ -80,8 +80,14 @@ object APRSService {
         >> validateLogin(socket)
         >> readForever(socket) { message =>
           APRSTelemetry.parse(message) match
-            case Some(t) => logger.debug(s"Got telemetry: $t".trim)
-            case None    => logger.debug(s"Got message: $message".trim)
+            case Some(t) =>
+              logger.debug(s"Got telemetry: $t".trim) >>
+              (for {
+                panelsVoltage  <- t.values.get(station.panelsIndex)
+                batteryVoltage <- t.values.get(station.batteryIndex)
+                res = influxService.save(station.callsign, panelsVoltage, batteryVoltage)
+              } yield res).getOrElse(IO.unit)
+            case None => logger.debug(s"Got message: $message".trim)
         }
       }
       .handleErrorWith {
@@ -89,6 +95,6 @@ object APRSService {
         case e =>
           logger.error(s"Error ${e.getMessage}, waiting") >>
           IO.sleep(10.seconds)
-          >> runClient(connectionCallsign, host, port, station)
+          >> runClient(connectionCallsign, host, port, station, influxService)
       }
 }

@@ -10,7 +10,7 @@ import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import routes.{CommandsRoutes, HealthRoutes}
-import services.{APRSService, CommandsService}
+import services.{APRSService, CommandsService, InfluxService}
 
 import java.net.{DatagramSocket, InetAddress}
 import scala.concurrent.duration.*
@@ -33,11 +33,17 @@ object RepeaterMonitor extends IOApp {
     )
     val httpApp = makeHttpApp(commandService)
 
-    APRSService.run(conf.aprs) &>
-    server(httpApp).use(server =>
+    val resources =
+      for {
+        influxService <- InfluxService.make(conf.influx.host, conf.influx.port, conf.influx.token, conf.influx.org, conf.influx.bucket)
+        server        <- server(httpApp)
+      } yield (influxService, server)
+
+    resources.use { case (influxService, server) =>
+      APRSService.run(conf.aprs, influxService) &>
       logger.info(s"Server Has Started at ${server.address}") >>
-        IO.never.as(ExitCode.Success)
-    )
+      IO.never.as(ExitCode.Success)
+    }
   }
 
   private def makeHttpApp(commandService: CommandsService): HttpApp[IO] = {

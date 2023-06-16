@@ -25,7 +25,8 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-circe" % http4sVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
-  "com.github.pureconfig" %% "pureconfig-core" % pureconfigVersion
+  "com.github.pureconfig" %% "pureconfig-core" % pureconfigVersion,
+  "com.influxdb" % "influxdb-client-java" % "6.9.0"
 )
 
 ThisBuild / assemblyMergeStrategy := {
