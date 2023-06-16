@@ -3,6 +3,7 @@ package routes
 import cats.effect.IO
 import io.circe.generic.auto.*
 import io.circe.syntax.*
+import model.CommandResponse.toResponse
 import model.MonitorResponseStatus.*
 import model.Voltages
 import org.http4s.HttpRoutes
@@ -12,9 +13,6 @@ import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import services.CommandsService
-import model.CommandResponse.toResponse
-
-import java.net.SocketTimeoutException
 
 object CommandsRoutes {
   private val dsl = new Http4sDsl[IO] {}
