@@ -19,24 +19,17 @@ object RepeaterMonitor extends IOApp {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  private val arduinoSocketResource = Resource.fromAutoCloseable(IO(new DatagramSocket()))
   private val configIO = ConfigSource.default.load[Configuration] match {
     case Left(error)   => IO.raiseError(new RuntimeException(error.prettyPrint()))
     case Right(config) => IO.pure(config)
   }
   def run(args: List[String]): IO[ExitCode] = configIO.flatMap { conf =>
-    val commandService = new CommandsService(
-      arduinoSocketResource,
-      InetAddress.getByName(conf.arduinoIp),
-      conf.arduinoPort,
-      conf.responseTimeout.seconds
-    )
-    val httpApp = makeHttpApp(commandService)
-
     val resources =
       for {
         influxService <- InfluxService.make(conf.influx.host, conf.influx.port, conf.influx.token, conf.influx.org, conf.influx.bucket)
-        server        <- server(httpApp)
+        commandsService = CommandsService.make(InetAddress.getByName(conf.arduinoIp), conf.arduinoPort, conf.responseTimeout.seconds)
+        httpApp         = makeHttpApp(commandsService)
+        server <- server(httpApp)
       } yield (influxService, server)
 
     resources.use { case (influxService, server) =>

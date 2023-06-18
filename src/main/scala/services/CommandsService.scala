@@ -43,6 +43,7 @@ class CommandsService(socketResource: Resource[IO, DatagramSocket], arduinoAddre
         res       <- handleResponse(arduinoSocket)
       } yield res
     }
+
   def setVoltages(voltages: Voltages): IO[MonitorResponseStatus] =
     socketResource.use { arduinoSocket =>
       val buf    = Array(SetVoltages.getCode) ++ voltages.offVoltage.asBytes ++ voltages.onVoltage.asBytes
@@ -50,4 +51,10 @@ class CommandsService(socketResource: Resource[IO, DatagramSocket], arduinoAddre
 
       IO.blocking(arduinoSocket.send(packet)) >> handleResponse(arduinoSocket)
     }
+}
+object CommandsService {
+  def make(arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration): CommandsService = {
+    val socketR = Resource.fromAutoCloseable(IO(new DatagramSocket()))
+    new CommandsService(socketR, arduinoAddress, arduinoPort, timeout)
+  }
 }
