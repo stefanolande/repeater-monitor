@@ -10,7 +10,7 @@ lazy val root = project
   )
 
 val http4sVersion          = "0.23.19"
-val logbackVersion         = "1.4.6"
+val logbackVersion         = "1.4.7"
 val munitCatsEffectVersion = "2.0.0-M3"
 val circeVersion           = "0.14.5"
 val pureconfigVersion      = "0.17.4"
