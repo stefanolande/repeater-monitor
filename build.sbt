@@ -36,6 +36,7 @@ ThisBuild / assemblyMergeStrategy := {
   case "META-INF/mime.types"                        => MergeStrategy.first
   case "META-INF/mailcap.default"                   => MergeStrategy.first
   case "META-INF/mimetypes.default"                 => MergeStrategy.first
+  case "META-INF/okio.kotlin_module"                 => MergeStrategy.first
   case d if d.endsWith(".jar:module-info.class")    => MergeStrategy.first
   case d if d.endsWith("module-info.class")         => MergeStrategy.first
   case d if d.endsWith("/MatchersBinder.class")     => MergeStrategy.discard
