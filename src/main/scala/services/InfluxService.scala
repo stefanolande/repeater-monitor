@@ -19,8 +19,7 @@ class InfluxService(influxWriteAPI: WriteApi) {
     for {
       point <- IO(
         Point
-          .measurement("voltage")
-          .addTag("repeater", stationName)
+          .measurement(stationName)
           .addField("panels", panelsVoltage)
           .addField("battery", batteryVoltage)
           .addField("aprs-path", aprsPath)
