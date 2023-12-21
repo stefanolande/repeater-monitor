@@ -10,6 +10,7 @@ import org.http4s.implicits.uri
 import org.http4s.{Method, Request, Response, Status}
 import routes.HealthRoutes
 import services.CommandsService
+import socket.SocketClient
 import utils.MunitCirceComparison
 import utils.Utils.bodyToString
 
@@ -22,7 +23,8 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
   private def env(f: (IO[Response[IO]], DatagramSocket) => IO[Unit]) = {
     val socket          = new DatagramSocket(1234, InetAddress.getLocalHost)
     val socketResource  = Resource.fromAutoCloseable(IO(socket))
-    val commandsService = new CommandsService(socketResource, InetAddress.getLocalHost, 1236, 100.millis)
+    val socketClient    = new SocketClient(socketResource, InetAddress.getLocalHost, 1236, 100.millis)
+    val commandsService = new CommandsService(socketClient)
     val commandsRoutes  = CommandsRoutes.routes(commandsService).orNotFound
     val request         = Request[IO](Method.POST, uri"/commands/rtc")
     f(commandsRoutes.run(request), socket)
