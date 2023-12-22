@@ -4,8 +4,8 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import com.comcast.ip4s.{Hostname, Port}
 import com.influxdb.client.domain.{Bucket, WritePrecision}
-import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory, WriteApi}
 import com.influxdb.client.write.Point
+import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory, WriteApi}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -26,15 +26,16 @@ class InfluxService(influxWriteAPI: WriteApi) {
           .time(Instant.now().toEpochMilli, WritePrecision.MS)
       )
       _ <- logger.debug(s"saving voltages $panelsVoltage and $batteryVoltage to influx")
-      _ <- IO(influxWriteAPI.writePoint(point))
+      _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
+
 }
 
 object InfluxService {
   def make(host: Hostname, port: Port, token: String, org: String, bucket: String): Resource[IO, InfluxService] =
     for {
       influxClientFactory <- Resource
-        .fromAutoCloseable(IO(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
-      writeApi <- Resource.eval(IO(influxClientFactory.makeWriteApi()))
+        .fromAutoCloseable(IO.blocking(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
+      writeApi <- Resource.eval(IO.blocking(influxClientFactory.makeWriteApi()))
     } yield InfluxService(writeApi)
 }

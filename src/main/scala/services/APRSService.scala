@@ -1,18 +1,17 @@
 package services
 
 import cats.data.OptionT
-import cats.effect.{IO, IOApp}
-import fs2.{text, Chunk, Stream}
-import fs2.io.net.{Network, Socket}
-import cats.effect.MonadCancelThrow
+import cats.effect.{IO, IOApp, MonadCancelThrow}
 import cats.syntax.all.*
 import com.comcast.ip4s.*
+import fs2.io.net.{Network, Socket}
+import fs2.{Chunk, Stream, text}
 import model.APRSTelemetry
 import model.configuration.{APRSConfiguration, Station}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import concurrent.duration.DurationInt
+import scala.concurrent.duration.DurationInt
 
 object APRSService {
 
