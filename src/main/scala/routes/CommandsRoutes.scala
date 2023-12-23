@@ -3,15 +3,14 @@ package routes
 import cats.effect.IO
 import io.circe.generic.auto.*
 import io.circe.syntax.*
-import model.CommandResponse.toResponse
-import model.MonitorResponseStatus.*
-import model.Voltages
 import org.http4s.HttpRoutes
 import org.http4s.circe.CirceEntityDecoder.*
 import org.http4s.circe.jsonEncoder
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import routes.model.APIResponse.toResponse
+import routes.model.Voltages
 import services.CommandsService
 
 object CommandsRoutes {

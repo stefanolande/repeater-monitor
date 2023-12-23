@@ -1,7 +1,8 @@
 package model
 
 import cats.data.NonEmptyList
-import cats.implicits._
+import cats.implicits.*
+import model.aprs.APRSTelemetry
 import munit.FunSuite
 
 class APRSTelemetryTest extends FunSuite {

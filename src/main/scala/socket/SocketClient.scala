@@ -1,8 +1,9 @@
 package socket
 
 import cats.effect.{IO, Resource}
-import model.MonitorResponseStatus.Timeout
-import model.{Command, MonitorResponseStatus}
+import model.controller.Commands.Command
+import model.controller.Outcome.Timeout
+import model.controller.Outcome
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, SocketTimeoutException}
 import scala.concurrent.duration.FiniteDuration
@@ -17,13 +18,13 @@ class SocketClient(socketResource: Resource[IO, DatagramSocket], arduinoAddress:
       res <- maybeRes match {
         case Left(_: SocketTimeoutException) => IO.pure(Timeout)
         case Left(e)                         => IO.raiseError(e)
-        case Right(_)                        => IO(MonitorResponseStatus.fromByte(responsePacket.getData.array(0)))
+        case Right(_)                        => IO(Outcome.fromBytes(responsePacket.getData.array))
       }
       _ <- IO(arduinoSocket.setSoTimeout(0))
     } yield res
   }
 
-  def send(command: Command): IO[MonitorResponseStatus] =
+  def send(command: Command): IO[Outcome] =
     socketResource.use { arduinoSocket =>
       val buf    = command.asBytes
       val packet = new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)

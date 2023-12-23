@@ -1,4 +1,4 @@
-package model
+package model.aprs
 
 import cats.data.NonEmptyList
 

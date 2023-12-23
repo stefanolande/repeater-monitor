@@ -1,7 +1,7 @@
 package services
 
 import munit.FunSuite
-import services.Conversions._
+import utils.Conversions._
 
 class ConversionsTest extends FunSuite {
 

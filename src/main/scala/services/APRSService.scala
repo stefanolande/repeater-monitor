@@ -6,7 +6,7 @@ import cats.syntax.all.*
 import com.comcast.ip4s.*
 import fs2.io.net.{Network, Socket}
 import fs2.{Chunk, Stream, text}
-import model.APRSTelemetry
+import model.aprs.APRSTelemetry
 import model.configuration.{APRSConfiguration, Station}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger

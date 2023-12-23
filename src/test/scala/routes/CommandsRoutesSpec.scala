@@ -1,18 +1,21 @@
 package routes
 
+import _root_.model.controller.Outcome
+import _root_.model.controller.Responses.*
 import cats.effect.{IO, Resource}
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import model.{CommandResponse, MonitorResponseStatus}
 import munit.CatsEffectSuite
 import org.http4s.implicits.uri
 import org.http4s.{Method, Request, Response, Status}
 import routes.HealthRoutes
+import routes.model.APIResponse
 import services.CommandsService
 import socket.SocketClient
-import utils.MunitCirceComparison
+import utils.Conversions.asBytes
 import utils.Utils.bodyToString
+import utils.{Conversions, MunitCirceComparison}
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress}
 import java.nio.charset.Charset
@@ -35,8 +38,8 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
     new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
   }
 
-  private val ACKDatagram = {
-    val bytes = Array('A'.byteValue())
+  private def ackDatagram(code: Byte, payload: Array[Byte]) = {
+    val bytes = Array('A'.byteValue(), code) ++ payload
     new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
   }
 
@@ -46,7 +49,7 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
         response <- responseIO
         body     <- bodyToString(response.body)
         _ = assertEquals(response.status, Status.Ok)
-        _ = assertEqualsJson(body, CommandResponse(MonitorResponseStatus.Timeout).asJson)
+        _ = assertEqualsJson(body, APIResponse(Outcome.Timeout).asJson)
       } yield ()
     }
   }
@@ -58,7 +61,7 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
         response <- responseIO
         body     <- bodyToString(response.body)
         _ = assertEquals(response.status, Status.Ok)
-        _ = assertEqualsJson(body, CommandResponse(MonitorResponseStatus.NACK).asJson)
+        _ = assertEqualsJson(body, APIResponse(Outcome.NACK).asJson)
       } yield ()
     }
   }
@@ -66,11 +69,11 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
   test("set-rtc route should report ACK the monitoring system") {
     env { case (responseIO, socket) =>
       for {
-        _        <- IO.blocking(socket.send(ACKDatagram))
+        _        <- IO.blocking(socket.send(ackDatagram('R', 1234.asBytes)))
         response <- responseIO
         body     <- bodyToString(response.body)
         _ = assertEquals(response.status, Status.Ok)
-        _ = assertEqualsJson(body, CommandResponse(MonitorResponseStatus.ACK).asJson)
+        _ = assertEqualsJson(body, APIResponse(Outcome.ACK(RTC(1234))).asJson)
       } yield ()
     }
   }
