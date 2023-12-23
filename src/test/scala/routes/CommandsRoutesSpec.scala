@@ -2,6 +2,7 @@ package routes
 
 import _root_.model.controller.Outcome
 import _root_.model.controller.Responses.*
+import _root_.model.controller.Commands.*
 import cats.effect.{IO, Resource}
 import io.circe.generic.auto.*
 import io.circe.parser.*
@@ -38,8 +39,8 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
     new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
   }
 
-  private def ackDatagram(code: Byte, payload: Array[Byte]) = {
-    val bytes = Array('A'.byteValue(), code) ++ payload
+  private def ackDatagram(command: Command) = {
+    val bytes = Array('A'.byteValue()) ++ command.asBytes
     new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
   }
 
@@ -69,7 +70,7 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
   test("set-rtc route should report ACK the monitoring system") {
     env { case (responseIO, socket) =>
       for {
-        _        <- IO.blocking(socket.send(ackDatagram('R', 1234.asBytes)))
+        _        <- IO.blocking(socket.send(ackDatagram(RTCSet(1234))))
         response <- responseIO
         body     <- bodyToString(response.body)
         _ = assertEquals(response.status, Status.Ok)
