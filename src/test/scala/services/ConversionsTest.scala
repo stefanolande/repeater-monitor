@@ -7,13 +7,13 @@ class ConversionsTest extends FunSuite {
 
   test("Int to byte conversion") {
     val i              = 13800
-    val b: Array[Byte] = Array(-24, 53, 0, 0)
+    val b: Array[Byte] = Array(0, 0, 53, -24)
     assertEquals(i.asBytes.toSeq, b.toSeq)
   }
 
-  test("Short to byte conversion") {
-    val i: Short       = 250
-    val b: Array[Byte] = Array(-6, 0)
+  test("Float to byte conversion") {
+    val i: Float       = 250
+    val b: Array[Byte] = Array(67,122,0,0)
     assertEquals(i.asBytes.toSeq, b.toSeq)
   }
 }
