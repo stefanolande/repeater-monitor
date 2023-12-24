@@ -11,7 +11,7 @@ import scala.concurrent.duration.FiniteDuration
 class SocketClient(socketResource: Resource[IO, DatagramSocket], arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration) {
 
   private def handleResponse(arduinoSocket: DatagramSocket) = {
-    val responsePacket = new DatagramPacket(new Array[Byte](128), 10)
+    val responsePacket = new DatagramPacket(new Array[Byte](128), 128)
     for {
       _        <- IO(arduinoSocket.setSoTimeout(timeout.toMillis.asInstanceOf[Int]))
       maybeRes <- IO.blocking(arduinoSocket.receive(responsePacket)).attempt

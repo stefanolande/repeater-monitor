@@ -7,14 +7,18 @@ import model.controller.Responses.Response
 object Outcome {
   given Encoder[Outcome] = (a: Outcome) => a.toString.asJson
 
-  def fromBytes(bytes: Array[Byte]): Outcome = bytes(0) match
-    case 'A' =>
-      Response.fromBytes(bytes.drop(1)) match
-        case Some(value) => Outcome.ACK(value)
-        case None        => Outcome.Invalid
-
-    case 'N' => Outcome.NACK
-    case _   => Outcome.Invalid
+  def fromBytes(bytes: Array[Byte]): Outcome =
+    Response.fromBytes(bytes) match
+      case Some(value) => Outcome.ACK(value)
+      case None        => Outcome.Invalid
+  //    bytes(0) match
+//      case 'A' =>
+//        Response.fromBytes(bytes.drop(1)) match
+//          case Some(value) => Outcome.ACK(value)
+//          case None        => Outcome.Invalid
+//
+//      case 'N' => Outcome.NACK
+//      case _   => Outcome.Invalid
 }
 
 enum Outcome {

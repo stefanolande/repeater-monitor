@@ -19,3 +19,4 @@ node_modules
 
 .docker-*
 *-stack.yaml
+application.conf

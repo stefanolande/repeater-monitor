@@ -1,14 +1,16 @@
-arduino-ip = 172.29.10.66
-arduino-port   = 8888
-response-timeout  = 5 // seconds
-
+arduino = {
+    ip = 127.0.0.1
+    port   = 8888
+    response-timeout  = 5 // seconds
+    station-name = "call"
+}
 aprs = {
-  connection-callsign = "IS0EIR"
+  connection-callsign = "call"
   port = 14580
   hostname = "rotate.aprs.net"
 
   stations = [
-    { callsign = "IR0UBN", panels-index = 3, battery-index = 0}
+    { callsign = "call", panels-index = 3, battery-index = 0}
   ]
 }
 
@@ -18,7 +20,7 @@ influx = {
   port = 8086
   port = ${?INFLUX_PORT}
   token = ${INFLUX_TOKEN}
-  org = "erac"
+  org = "org"
   org = ${?INFLUX_ORG}
   bucket = "repeater"
   bucket = ${?INFLUX_BUCKET}

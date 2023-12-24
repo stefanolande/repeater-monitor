@@ -10,7 +10,7 @@ import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import routes.{CommandsRoutes, HealthRoutes}
-import services.{APRSService, CommandsService, InfluxService}
+import services.{APRSService, CommandsService, InfluxService, MonitoringService}
 import socket.SocketClient
 
 import java.net.{DatagramSocket, InetAddress}
@@ -27,15 +27,24 @@ object RepeaterMonitor extends IOApp {
   def run(args: List[String]): IO[ExitCode] = configIO.flatMap { conf =>
     val resources =
       for {
-        influxService <- InfluxService.make(conf.influx.host, conf.influx.port, conf.influx.token, conf.influx.org, conf.influx.bucket)
-        socketClient    = SocketClient.make(InetAddress.getByName(conf.arduinoIp), conf.arduinoPort, conf.responseTimeout.seconds)
-        commandsService = new CommandsService(socketClient)
-        httpApp         = makeHttpApp(commandsService)
+        influxService <- InfluxService.make(
+          conf.influx.host,
+          conf.influx.port,
+          conf.influx.token,
+          conf.influx.org,
+          conf.influx.bucket,
+          conf.arduino.stationName
+        )
+        socketClient      = SocketClient.make(InetAddress.getByName(conf.arduino.ip), conf.arduino.port, conf.arduino.responseTimeout.seconds)
+        commandsService   = new CommandsService(socketClient)
+        httpApp           = makeHttpApp(commandsService)
+        monitoringService = MonitoringService(socketClient, influxService)
         server <- server(httpApp)
-      } yield (influxService, server)
+      } yield (influxService, monitoringService, server)
 
-    resources.use { case (influxService, server) =>
+    resources.use { case (influxService, monitoringService, server) =>
       APRSService.run(conf.aprs, influxService) &>
+      monitoringService.monitor &>
       logger.info(s"Server Has Started at ${server.address}") >>
       IO.never.as(ExitCode.Success)
     }

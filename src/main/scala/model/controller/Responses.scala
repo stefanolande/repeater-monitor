@@ -25,16 +25,17 @@ object Responses {
 
   case class Reset() extends Response
 
-  case class Telemetry(panelVoltage: Float, panelCurrent: Float, batteryVoltage: Float, batteryCurrent: Float) extends Response
+  case class Telemetry(timestamp: Int, panelVoltage: Float, panelCurrent: Float, batteryVoltage: Float, batteryCurrent: Float) extends Response
   object Telemetry {
     def fromBytes(b: Array[Byte]): Option[Telemetry] =
       if (b.length > 19) {
+        val timestamp      = b.slice(0, 4).asInt
         val panelVoltage   = b.slice(4, 8).asFloat
         val panelCurrent   = b.slice(8, 12).asFloat
         val batteryVoltage = b.slice(12, 16).asFloat
         val batteryCurrent = b.slice(16, 20).asFloat
 
-        (panelVoltage, panelCurrent, batteryVoltage, batteryCurrent).mapN(Telemetry.apply)
+        (timestamp, panelVoltage, panelCurrent, batteryVoltage, batteryCurrent).mapN(Telemetry.apply)
       } else None
   }
 

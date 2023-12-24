@@ -11,7 +11,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.time.Instant
 
-class InfluxService(influxWriteAPI: WriteApi) {
+class InfluxService(influxWriteAPI: WriteApi, arduinoCallsign: String) {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
@@ -20,8 +20,8 @@ class InfluxService(influxWriteAPI: WriteApi) {
       point <- IO(
         Point
           .measurement(stationName)
-          .addField("panels", panelsVoltage)
-          .addField("battery", batteryVoltage)
+          .addField("panels-voltage", panelsVoltage)
+          .addField("battery-voltage", batteryVoltage)
           .addField("aprs-path", aprsPath)
           .time(Instant.now().toEpochMilli, WritePrecision.MS)
       )
@@ -29,13 +29,24 @@ class InfluxService(influxWriteAPI: WriteApi) {
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
 
+  def saveController(timestamp: Int, panelsVoltage: Float, panelsCurrent: Float, batteryVoltage: Float, batteryCurrent: Float) =
+    val point = Point
+      .measurement(arduinoCallsign)
+      .addField("panels-voltage", panelsVoltage)
+      .addField("panels-current", panelsCurrent)
+      .addField("battery-voltage", batteryVoltage)
+      .addField("battery-current", batteryCurrent)
+      .time(timestamp, WritePrecision.S)
+    logger.debug(s"[$timestamp] saving panels voltage $panelsVoltage V $panelsCurrent A and battery $batteryVoltage V $batteryCurrent A to influx") >>
+    IO.blocking(influxWriteAPI.writePoint(point))
+
 }
 
 object InfluxService {
-  def make(host: Hostname, port: Port, token: String, org: String, bucket: String): Resource[IO, InfluxService] =
+  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, arduinoCallsing: String): Resource[IO, InfluxService] =
     for {
       influxClientFactory <- Resource
         .fromAutoCloseable(IO.blocking(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
       writeApi <- Resource.eval(IO.blocking(influxClientFactory.makeWriteApi()))
-    } yield InfluxService(writeApi)
+    } yield InfluxService(writeApi, arduinoCallsing)
 }
