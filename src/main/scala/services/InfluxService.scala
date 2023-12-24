@@ -43,10 +43,10 @@ class InfluxService(influxWriteAPI: WriteApi, arduinoCallsign: String) {
 }
 
 object InfluxService {
-  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, arduinoCallsing: String): Resource[IO, InfluxService] =
+  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, arduinoCallsign: String): Resource[IO, InfluxService] =
     for {
       influxClientFactory <- Resource
         .fromAutoCloseable(IO.blocking(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
       writeApi <- Resource.eval(IO.blocking(influxClientFactory.makeWriteApi()))
-    } yield InfluxService(writeApi, arduinoCallsing)
+    } yield InfluxService(writeApi, arduinoCallsign)
 }

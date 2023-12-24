@@ -24,7 +24,7 @@ class MonitoringService(socketClient: SocketClient, influxService: InfluxService
       _ <- res match
         case Outcome.ACK(Responses.Telemetry(timestamp, panelVoltage, panelCurrent, batteryVoltage, batteryCurrent)) =>
           influxService.saveController(timestamp, panelVoltage, panelCurrent, batteryVoltage, batteryCurrent)
-        case o => logger.error(s"Got unexpected response from monitor $o")
+        case o => logger.error(s"Got unexpected response from monitor: $o")
       _ <- IO.sleep(1.minute)
       _ <- monitor
     } yield ()
