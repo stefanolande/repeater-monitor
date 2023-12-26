@@ -35,7 +35,7 @@ object RepeaterMonitor extends IOApp {
           conf.influx.bucket,
           conf.arduino.stationName
         )
-        socketClient      = SocketClient.make(InetAddress.getByName(conf.arduino.ip), conf.arduino.port, conf.arduino.responseTimeout.seconds)
+        socketClient <- SocketClient.make(InetAddress.getByName(conf.arduino.ip), conf.arduino.port, conf.arduino.responseTimeout.seconds)
         commandsService   = new CommandsService(socketClient)
         httpApp           = makeHttpApp(commandsService)
         monitoringService = MonitoringService(socketClient, influxService)

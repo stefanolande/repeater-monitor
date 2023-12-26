@@ -15,7 +15,7 @@ class InfluxService(influxWriteAPI: WriteApi, arduinoCallsign: String) {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  def save(stationName: String, panelsVoltage: Double, batteryVoltage: Double, aprsPath: String): IO[Unit] =
+  def saveAPRS(stationName: String, panelsVoltage: Double, batteryVoltage: Double, aprsPath: String): IO[Unit] =
     for {
       point <- IO(
         Point
@@ -29,7 +29,7 @@ class InfluxService(influxWriteAPI: WriteApi, arduinoCallsign: String) {
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
 
-  def saveController(timestamp: Int, panelsVoltage: Float, panelsCurrent: Float, batteryVoltage: Float, batteryCurrent: Float) =
+  def saveMonitoring(timestamp: Int, panelsVoltage: Float, panelsCurrent: Float, batteryVoltage: Float, batteryCurrent: Float): IO[Unit] =
     val point = Point
       .measurement(arduinoCallsign)
       .addField("panels-voltage", panelsVoltage)

@@ -3,12 +3,18 @@ package socket
 import cats.effect.{IO, Resource}
 import model.controller.Commands.Command
 import model.controller.Outcome.Timeout
-import model.controller.Outcome
+import model.controller.{Commands, Outcome}
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, SocketTimeoutException}
 import scala.concurrent.duration.FiniteDuration
 
-class SocketClient(socketResource: Resource[IO, DatagramSocket], arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration) {
+class SocketClient(
+    socketResource: Resource[IO, DatagramSocket],
+    perpetualSocket: DatagramSocket,
+    arduinoAddress: InetAddress,
+    arduinoPort: Int,
+    timeout: FiniteDuration
+) {
 
   private def handleResponse(arduinoSocket: DatagramSocket) = {
     val responsePacket = new DatagramPacket(new Array[Byte](128), 128)
@@ -30,11 +36,21 @@ class SocketClient(socketResource: Resource[IO, DatagramSocket], arduinoAddress:
       val packet = new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)
       IO.blocking(arduinoSocket.send(packet)) >> handleResponse(arduinoSocket)
     }
+
+  // telemetry commands are expected to be sent often, so we always use the same socket to optimise
+  def send(command: Commands.Telemetry): IO[Outcome] = {
+    val buf    = command.asBytes
+    val packet = new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)
+    IO.blocking(perpetualSocket.send(packet)) >> handleResponse(perpetualSocket)
+  }
 }
 
 object SocketClient {
-  def make(arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration): SocketClient = {
-    val socketR = Resource.fromAutoCloseable(IO(new DatagramSocket()))
-    new SocketClient(socketR, arduinoAddress, arduinoPort, timeout)
+  def make(arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration): Resource[IO, SocketClient] = {
+    val socketR          = Resource.fromAutoCloseable(IO(new DatagramSocket()))
+    val perpetualSocketR = Resource.fromAutoCloseable(IO(new DatagramSocket()))
+    perpetualSocketR.flatMap { perpetualSocket =>
+      Resource.pure(new SocketClient(socketR, perpetualSocket, arduinoAddress, arduinoPort, timeout))
+    }
   }
 }
