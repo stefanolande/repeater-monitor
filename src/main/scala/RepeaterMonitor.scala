@@ -10,8 +10,8 @@ import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import routes.{CommandsRoutes, HealthRoutes}
-import services.{APRSService, CommandsService, InfluxService, MonitoringService}
-import socket.SocketClient
+import services.{APRSService, CommandsService, MonitoringService}
+import clients.{InfluxClient, RepeaterMonitorClient}
 
 import java.net.{DatagramSocket, InetAddress}
 import scala.concurrent.duration.*
@@ -27,7 +27,7 @@ object RepeaterMonitor extends IOApp {
   def run(args: List[String]): IO[ExitCode] = configIO.flatMap { conf =>
     val resources =
       for {
-        influxService <- InfluxService.make(
+        influxService <- InfluxClient.make(
           conf.influx.host,
           conf.influx.port,
           conf.influx.token,
@@ -35,7 +35,7 @@ object RepeaterMonitor extends IOApp {
           conf.influx.bucket,
           conf.arduino.stationName
         )
-        socketClient <- SocketClient.make(InetAddress.getByName(conf.arduino.ip), conf.arduino.port, conf.arduino.responseTimeout.seconds)
+        socketClient <- RepeaterMonitorClient.make(InetAddress.getByName(conf.arduino.ip), conf.arduino.port, conf.arduino.responseTimeout.seconds)
         commandsService   = new CommandsService(socketClient)
         httpApp           = makeHttpApp(commandsService)
         monitoringService = MonitoringService(socketClient, influxService)

@@ -1,4 +1,4 @@
-package socket
+package clients
 
 import cats.effect.{IO, Resource}
 import model.controller.Commands.Command
@@ -8,7 +8,7 @@ import model.controller.{Commands, Outcome}
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, SocketTimeoutException}
 import scala.concurrent.duration.FiniteDuration
 
-class SocketClient(
+class RepeaterMonitorClient(
     socketResource: Resource[IO, DatagramSocket],
     perpetualSocket: DatagramSocket,
     arduinoAddress: InetAddress,
@@ -45,12 +45,12 @@ class SocketClient(
   }
 }
 
-object SocketClient {
-  def make(arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration): Resource[IO, SocketClient] = {
+object RepeaterMonitorClient {
+  def make(arduinoAddress: InetAddress, arduinoPort: Int, timeout: FiniteDuration): Resource[IO, RepeaterMonitorClient] = {
     val socketR          = Resource.fromAutoCloseable(IO(new DatagramSocket()))
     val perpetualSocketR = Resource.fromAutoCloseable(IO(new DatagramSocket()))
     perpetualSocketR.flatMap { perpetualSocket =>
-      Resource.pure(new SocketClient(socketR, perpetualSocket, arduinoAddress, arduinoPort, timeout))
+      Resource.pure(new RepeaterMonitorClient(socketR, perpetualSocket, arduinoAddress, arduinoPort, timeout))
     }
   }
 }

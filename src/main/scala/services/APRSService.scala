@@ -3,6 +3,7 @@ package services
 import cats.data.OptionT
 import cats.effect.{IO, IOApp, MonadCancelThrow}
 import cats.syntax.all.*
+import clients.InfluxClient
 import com.comcast.ip4s.*
 import fs2.io.net.{Network, Socket}
 import fs2.{Chunk, Stream, text}
@@ -17,7 +18,7 @@ object APRSService {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  def run(aprsConf: APRSConfiguration, influxService: InfluxService): IO[Unit] =
+  def run(aprsConf: APRSConfiguration, influxService: InfluxClient): IO[Unit] =
     aprsConf.stations.map(station => runClient(aprsConf.connectionCallsign, aprsConf.hostname, aprsConf.port, station, influxService)).parSequence_
 
   private def passcode(callsign: String): Int = {
@@ -69,7 +70,7 @@ object APRSService {
       else IO.raiseError(LoginFailed)
     )
 
-  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station, influxService: InfluxService): IO[Unit] =
+  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station, influxService: InfluxClient): IO[Unit] =
     Network[IO]
       .client(SocketAddress(host, port))
       .onFinalize(logger.info(s"Releasing APRS-IS socket for ${station.callsign}"))

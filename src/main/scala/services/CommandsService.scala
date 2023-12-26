@@ -8,13 +8,13 @@ import model.controller.Outcome
 import model.controller.Outcome.Timeout
 import routes.model.Voltages
 import utils.Conversions.*
-import socket.SocketClient
+import clients.RepeaterMonitorClient
 
 import java.net.*
 import java.nio.ByteBuffer
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class CommandsService(socketClient: SocketClient) {
+class CommandsService(socketClient: RepeaterMonitorClient) {
 
   val setRtc: IO[Outcome] =
     socketClient.send(RTCSet.now)

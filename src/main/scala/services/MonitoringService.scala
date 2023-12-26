@@ -8,14 +8,14 @@ import model.controller.{Commands, Outcome, Responses}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import routes.model.Voltages
-import socket.SocketClient
+import clients.{InfluxClient, RepeaterMonitorClient}
 import utils.Conversions.*
 
 import java.net.*
 import java.nio.ByteBuffer
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class MonitoringService(socketClient: SocketClient, influxService: InfluxService) {
+class MonitoringService(socketClient: RepeaterMonitorClient, influxService: InfluxClient) {
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
   val monitor: IO[Unit] = IO.defer {

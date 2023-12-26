@@ -1,4 +1,4 @@
-package services
+package clients
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -11,7 +11,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.time.Instant
 
-class InfluxService(influxWriteAPI: WriteApi, arduinoCallsign: String) {
+class InfluxClient(influxWriteAPI: WriteApi, arduinoCallsign: String) {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
@@ -42,11 +42,11 @@ class InfluxService(influxWriteAPI: WriteApi, arduinoCallsign: String) {
 
 }
 
-object InfluxService {
-  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, arduinoCallsign: String): Resource[IO, InfluxService] =
+object InfluxClient {
+  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, arduinoCallsign: String): Resource[IO, InfluxClient] =
     for {
       influxClientFactory <- Resource
         .fromAutoCloseable(IO.blocking(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
       writeApi <- Resource.eval(IO.blocking(influxClientFactory.makeWriteApi()))
-    } yield InfluxService(writeApi, arduinoCallsign)
+    } yield InfluxClient(writeApi, arduinoCallsign)
 }
