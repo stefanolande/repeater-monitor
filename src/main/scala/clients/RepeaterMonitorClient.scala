@@ -38,7 +38,7 @@ class RepeaterMonitorClient(
     }
 
   // telemetry commands are expected to be sent often, so we always use the same socket to optimise
-  def send(command: Commands.Telemetry): IO[Outcome] = {
+  def send(command: Commands.Telemetry): IO[Outcome] = synchronized {
     val buf    = command.asBytes
     val packet = new DatagramPacket(buf, buf.length, arduinoAddress, arduinoPort)
     IO.blocking(perpetualSocket.send(packet)) >> handleResponse(perpetualSocket)
