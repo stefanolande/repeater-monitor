@@ -33,12 +33,12 @@ object RepeaterMonitor extends IOApp {
           conf.influx.token,
           conf.influx.org,
           conf.influx.bucket,
-          conf.arduino.stationName
+          conf.monitor.stationName
         )
-        socketClient <- RepeaterMonitorClient.make(InetAddress.getByName(conf.arduino.ip), conf.arduino.port, conf.arduino.responseTimeout.seconds)
+        socketClient <- RepeaterMonitorClient.make(InetAddress.getByName(conf.monitor.ip), conf.monitor.port, conf.monitor.responseTimeout.seconds)
         commandsService   = new CommandsService(socketClient)
         httpApp           = makeHttpApp(commandsService)
-        monitoringService = MonitoringService(socketClient, influxService)
+        monitoringService = MonitoringService(conf.monitor.telemetryInterval.minutes, socketClient, influxService)
         server <- server(httpApp)
       } yield (influxService, monitoringService, server)
 

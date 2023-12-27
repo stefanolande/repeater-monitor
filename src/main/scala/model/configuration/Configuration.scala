@@ -5,7 +5,7 @@ import pureconfig._
 import pureconfig.generic.derivation.default._
 
 case class Configuration(
-    arduino: ArduinoConfiguration,
+    monitor: MonitorConfiguration,
     aprs: APRSConfiguration,
     influx: InfluxConfiguration
 ) derives ConfigReader

@@ -9,9 +9,9 @@ import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory, WriteApi}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime, ZoneId}
 
-class InfluxClient(influxWriteAPI: WriteApi, arduinoCallsign: String) {
+class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
@@ -29,24 +29,36 @@ class InfluxClient(influxWriteAPI: WriteApi, arduinoCallsign: String) {
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
 
-  def saveMonitoring(timestamp: Int, panelsVoltage: Float, panelsCurrent: Float, batteryVoltage: Float, batteryCurrent: Float): IO[Unit] =
+  def saveMonitoring(
+      timestamp: Int,
+      panelsVoltage: Float,
+      panelsCurrent: Float,
+      batteryVoltage: Float,
+      batteryCurrent: Float,
+      globalStatus: Boolean
+  ): IO[Unit] =
     val point = Point
-      .measurement(arduinoCallsign)
+      .measurement(monitorCallsign)
       .addField("panels-voltage", panelsVoltage)
       .addField("panels-current", panelsCurrent)
       .addField("battery-voltage", batteryVoltage)
       .addField("battery-current", batteryCurrent)
+      .addField("global-status", globalStatus)
       .time(timestamp, WritePrecision.S)
-    logger.debug(s"[$timestamp] saving panels voltage $panelsVoltage V $panelsCurrent A and battery $batteryVoltage V $batteryCurrent A to influx") >>
+    logger.debug(
+      s"[${Instant
+          .ofEpochSecond(timestamp)
+          .atZone(ZoneId.systemDefault())}] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
+    ) >>
     IO.blocking(influxWriteAPI.writePoint(point))
 
 }
 
 object InfluxClient {
-  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, arduinoCallsign: String): Resource[IO, InfluxClient] =
+  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, monitorCallsign: String): Resource[IO, InfluxClient] =
     for {
       influxClientFactory <- Resource
         .fromAutoCloseable(IO.blocking(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
       writeApi <- Resource.eval(IO.blocking(influxClientFactory.makeWriteApi()))
-    } yield InfluxClient(writeApi, arduinoCallsign)
+    } yield InfluxClient(writeApi, monitorCallsign)
 }

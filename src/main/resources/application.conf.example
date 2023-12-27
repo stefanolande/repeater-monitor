@@ -1,8 +1,9 @@
-arduino = {
+ = {
     ip = 127.0.0.1
     port   = 8888
     response-timeout  = 5 // seconds
     station-name = "call"
+    telemetry-interval = 1 // minutes
 }
 aprs = {
   connection-callsign = "call"
