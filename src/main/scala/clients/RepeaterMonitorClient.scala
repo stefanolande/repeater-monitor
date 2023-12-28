@@ -1,9 +1,9 @@
 package clients
 
 import cats.effect.{IO, Resource}
-import model.controller.Commands.Command
-import model.controller.Outcome.Timeout
-import model.controller.{Commands, Outcome}
+import model.monitor.Commands.Command
+import model.monitor.Outcome.Timeout
+import model.monitor.{Commands, Outcome}
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, SocketTimeoutException}
 import scala.concurrent.duration.FiniteDuration

@@ -1,9 +1,11 @@
 package routes
 
-import _root_.model.controller.Outcome
-import _root_.model.controller.Responses.*
-import _root_.model.controller.Commands.*
+import _root_.model.monitor.Commands.*
+import _root_.model.monitor.Outcome
+import _root_.model.monitor.Responses.*
 import cats.effect.{IO, Resource}
+import cats.implicits.*
+import clients.RepeaterMonitorClient
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
@@ -13,7 +15,6 @@ import org.http4s.{Method, Request, Response, Status}
 import routes.HealthRoutes
 import routes.model.APIResponse
 import services.CommandsService
-import clients.RepeaterMonitorClient
 import utils.Conversions.asBytes
 import utils.Utils.bodyToString
 import utils.{Conversions, MunitCirceComparison}
@@ -73,7 +74,7 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
         response <- responseIO
         body     <- bodyToString(response.body)
         _ = assertEquals(response.status, Status.Ok)
-        _ = assertEqualsJson(body, APIResponse(Outcome.ACK(RTC(1234))).asJson)
+        _ = assertEqualsJson(body, APIResponse(Outcome.ACK(RTC(1234)), RTC(1234).some).asJson)
       } yield ()
     }
   }

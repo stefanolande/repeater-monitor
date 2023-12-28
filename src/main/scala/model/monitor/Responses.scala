@@ -1,4 +1,4 @@
-package model.controller
+package model.monitor
 
 import cats.implicits.*
 import cats.syntax.apply.*

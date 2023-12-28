@@ -1,8 +1,8 @@
-package model.controller
+package model.monitor
 
 import io.circe.*
 import io.circe.syntax.*
-import model.controller.Responses.Response
+import model.monitor.Responses.Response
 
 object Outcome {
   given Encoder[Outcome] = (a: Outcome) => a.toString.asJson
@@ -21,4 +21,10 @@ enum Outcome {
   case NACK
   case Timeout
   case Invalid
+
+  override def toString: String = this match
+    case Outcome.ACK(_)  => "ack"
+    case Outcome.NACK    => "nack"
+    case Outcome.Timeout => "timeout"
+    case Outcome.Invalid => "invalid"
 }

@@ -47,8 +47,7 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
       .time(timestamp, WritePrecision.S)
     logger.debug(
       s"[${Instant
-          .ofEpochSecond(timestamp)
-          .atZone(ZoneId.systemDefault())}] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
+          .ofEpochSecond(timestamp)}] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
     ) >>
     IO.blocking(influxWriteAPI.writePoint(point))
 

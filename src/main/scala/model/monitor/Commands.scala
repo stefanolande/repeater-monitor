@@ -1,4 +1,4 @@
-package model.controller
+package model.monitor
 
 import model.*
 import utils.Conversions.*
@@ -39,17 +39,19 @@ object Commands {
   case class ConfigRead() extends Command
 
   case class ConfigSet(configParam: ConfigParam, value: Float) extends Command {
-    override def asBytes: Array[Byte] = Array(configParam.toByte, this.toCode) ++ value.asBytes
+    override def asBytes: Array[Byte] = Array(this.toCode, configParam.toByte) ++ value.asBytes
   }
 
   case class OutputRead() extends Command
 
   case class OutputSet(outputNumber: Int, status: Boolean) extends Command {
-    override def asBytes: Array[Byte] = Array(
-      outputNumber.toByte,
-      (if (status) 0x01
-       else 0x00).toByte
-    )
+    override def asBytes: Array[Byte] =
+      Array(
+        this.toCode,
+        outputNumber.toByte,
+        (if (status) 0x01 else 0x00).toByte
+      )
+
   }
 
 }

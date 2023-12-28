@@ -3,9 +3,9 @@ package services
 import cats.effect.{IO, Resource}
 import clients.{InfluxClient, RepeaterMonitorClient}
 import model.*
-import model.controller.Commands.{Command, ConfigSet, RTCSet, Telemetry}
-import model.controller.ConfigParam.{MainVoltageOff, MainVoltageOn}
-import model.controller.{Commands, Outcome, Responses}
+import model.monitor.Commands.{Command, ConfigSet, RTCSet, Telemetry}
+import model.monitor.ConfigParam.{MainVoltageOff, MainVoltageOn}
+import model.monitor.{Commands, Outcome, Responses}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import routes.model.Voltages
