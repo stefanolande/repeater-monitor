@@ -3,6 +3,8 @@ package model.controller
 import model.*
 import utils.Conversions.*
 
+import java.time.{Instant, ZoneId}
+
 object Commands {
   sealed trait Command {
     def asBytes: Array[Byte] = Array(this.toCode)
@@ -30,7 +32,8 @@ object Commands {
   }
 
   object RTCSet {
-    def now: RTCSet = RTCSet((System.currentTimeMillis / 1000).asInstanceOf[Int])
+    def now: RTCSet = RTCSet(Instant.now().getEpochSecond.toInt)
+
   }
 
   case class ConfigRead() extends Command

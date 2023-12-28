@@ -16,7 +16,7 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 class CommandsService(socketClient: RepeaterMonitorClient) {
 
-  val setRtc: IO[Outcome] =
+  def setRtc(): IO[Outcome] =
     socketClient.send(RTCSet.now)
 
   def setVoltages(voltages: Voltages): IO[Outcome] =

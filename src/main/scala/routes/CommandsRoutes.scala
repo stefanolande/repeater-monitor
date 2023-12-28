@@ -24,7 +24,7 @@ object CommandsRoutes {
       case POST -> Root / "commands" / "rtc" =>
         val payloadIO = for {
           _   <- logger.debug("received set-rtc")
-          res <- commandsService.setRtc
+          res <- commandsService.setRtc()
         } yield res.toResponse.asJson
         Ok(payloadIO)
 
