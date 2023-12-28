@@ -12,6 +12,7 @@ import pureconfig.ConfigSource
 import routes.{CommandsRoutes, HealthRoutes}
 import services.{APRSService, CommandsService, MonitoringService}
 import clients.{InfluxClient, RepeaterMonitorClient}
+import org.http4s.server.middleware.CORS
 
 import java.net.{DatagramSocket, InetAddress}
 import scala.concurrent.duration.*
@@ -66,7 +67,7 @@ object RepeaterMonitor extends IOApp {
       .default[IO]
       .withHost(host)
       .withPort(port)
-      .withHttpApp(httpApp)
+      .withHttpApp(CORS.policy.withAllowOriginAll.apply(httpApp))
       .build
   }
 }

@@ -11,7 +11,7 @@ enum ConfigParam {
   case MainVoltageOn
   case MainVoltageOff
 
-  def toModel = this match
+  def toModel: MonitorConfigParam = this match
     case ConfigParam.MainVoltageOn  => MonitorConfigParam.MainVoltageOn
     case ConfigParam.MainVoltageOff => MonitorConfigParam.MainVoltageOff
 }
