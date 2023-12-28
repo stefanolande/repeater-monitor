@@ -1,9 +1,9 @@
-package clients
+package clients.monitor
 
 import cats.effect.{IO, Resource}
-import model.monitor.Commands.Command
-import model.monitor.Outcome.Timeout
-import model.monitor.{Commands, Outcome}
+import clients.monitor.Commands.*
+import clients.monitor.Outcome.*
+import clients.monitor.RepeaterMonitorClient
 
 import java.net.{DatagramPacket, DatagramSocket, InetAddress, SocketTimeoutException}
 import scala.concurrent.duration.FiniteDuration

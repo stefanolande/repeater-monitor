@@ -1,7 +1,8 @@
-package clients
+package clients.influx
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
+import clients.influx.InfluxClient
 import com.comcast.ip4s.{Hostname, Port}
 import com.influxdb.client.domain.{Bucket, WritePrecision}
 import com.influxdb.client.write.Point

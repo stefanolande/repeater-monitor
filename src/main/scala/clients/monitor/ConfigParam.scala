@@ -1,4 +1,4 @@
-package model.monitor
+package clients.monitor
 
 import cats.implicits.*
 import io.circe.*

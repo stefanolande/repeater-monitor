@@ -1,8 +1,8 @@
-package routes.model
+package routes.payloads
 
-import model.monitor.Outcome
-import model.monitor.Responses.Response
+import clients.monitor.Responses.Response
 import cats.implicits.*
+import clients.monitor.Outcome
 
 object APIResponse {
   extension (s: Outcome) {

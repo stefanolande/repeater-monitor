@@ -1,8 +1,8 @@
-package model.monitor
+package clients.monitor
 
 import io.circe.*
 import io.circe.syntax.*
-import model.monitor.Responses.Response
+import Responses.Response
 
 object Outcome {
   given Encoder[Outcome] = (a: Outcome) => a.toString.asJson

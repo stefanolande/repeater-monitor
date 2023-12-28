@@ -9,12 +9,12 @@ import org.http4s.circe.jsonEncoder
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import routes.model.APIResponse.toResponse
-import routes.model.Config.*
-import routes.model.{Config, Output, Voltages}
+import routes.payloads.APIResponse.toResponse
+import routes.payloads.Config.*
+import routes.payloads.{Config, Output, Voltages}
 import services.CommandsService
-import _root_.model.monitor.ConfigParam.given_Encoder_ConfigParam
-import routes.model.ConfigParam.given_Decoder_ConfigParam
+import clients.monitor.ConfigParam.given_Encoder_ConfigParam
+import routes.payloads.ConfigParam.given_Decoder_ConfigParam
 
 object CommandsRoutes {
   private val dsl = new Http4sDsl[IO] {}

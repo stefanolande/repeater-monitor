@@ -9,3 +9,8 @@ datasources:
     url: http://influxdb:8086
     isDefault: true
     editable: true
+    jsonData:
+      defaultBucket: repeater
+      httpMode: POST
+      organization: erac
+      version: Flux

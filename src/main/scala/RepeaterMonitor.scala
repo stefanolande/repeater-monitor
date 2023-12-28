@@ -1,6 +1,7 @@
 import cats.data.Kleisli
 import cats.effect.*
 import cats.implicits.{showInterpolator, toSemigroupKOps}
+import clients.influx.InfluxClient
 import com.comcast.ip4s.{host, port}
 import model.configuration.Configuration
 import org.http4s.dsl.Http4sDsl
@@ -11,7 +12,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import routes.{CommandsRoutes, HealthRoutes}
 import services.{APRSService, CommandsService, MonitoringService}
-import clients.{InfluxClient, RepeaterMonitorClient}
+import clients.monitor.RepeaterMonitorClient
 import org.http4s.server.middleware.CORS
 
 import java.net.{DatagramSocket, InetAddress}

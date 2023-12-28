@@ -1,13 +1,12 @@
 package services
 
 import cats.effect.{IO, Resource}
-import clients.RepeaterMonitorClient
 import model.*
-import model.monitor.Commands.{Command, ConfigSet, OutputSet, RTCSet}
-import model.monitor.ConfigParam.{MainVoltageOff, MainVoltageOn}
-import model.monitor.Outcome.Timeout
-import model.monitor.{ConfigParam, Outcome}
-import routes.model.Voltages
+import clients.monitor.Commands.{Command, ConfigSet, OutputSet, RTCSet}
+import clients.monitor.ConfigParam.{MainVoltageOff, MainVoltageOn}
+import clients.monitor.{ConfigParam, Outcome, RepeaterMonitorClient}
+import clients.monitor.Outcome.Timeout
+import routes.payloads.Voltages
 import utils.Conversions.*
 
 import java.net.*

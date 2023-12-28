@@ -1,11 +1,10 @@
 package routes
 
-import _root_.model.monitor.Commands.*
-import _root_.model.monitor.Outcome
-import _root_.model.monitor.Responses.*
 import cats.effect.{IO, Resource}
 import cats.implicits.*
-import clients.RepeaterMonitorClient
+import clients.monitor.Commands.*
+import clients.monitor.Responses.*
+import clients.monitor.{Outcome, RepeaterMonitorClient}
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import io.circe.syntax.*
@@ -13,7 +12,7 @@ import munit.CatsEffectSuite
 import org.http4s.implicits.uri
 import org.http4s.{Method, Request, Response, Status}
 import routes.HealthRoutes
-import routes.model.APIResponse
+import routes.payloads.APIResponse
 import services.CommandsService
 import utils.Conversions.asBytes
 import utils.Utils.bodyToString

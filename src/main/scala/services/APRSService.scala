@@ -3,7 +3,7 @@ package services
 import cats.data.OptionT
 import cats.effect.{IO, IOApp, MonadCancelThrow}
 import cats.syntax.all.*
-import clients.InfluxClient
+import clients.influx.InfluxClient
 import com.comcast.ip4s.*
 import fs2.io.net.{Network, Socket}
 import fs2.{Chunk, Stream, text}

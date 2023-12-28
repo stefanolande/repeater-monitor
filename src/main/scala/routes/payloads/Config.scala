@@ -1,9 +1,9 @@
-package routes.model
+package routes.payloads
 import cats.implicits.*
+import clients.monitor.ConfigParam as MonitorConfigParam
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import model.monitor.ConfigParam as MonitorConfigParam
 
 import scala.util.Try
 
