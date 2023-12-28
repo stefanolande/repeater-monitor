@@ -32,7 +32,7 @@
       },
       "id": 5,
       "panels": [],
-      "title": "IR0UIW",
+      "title": "IR0UIW (Monte Serpeddì)",
       "type": "row"
     },
     {
@@ -123,6 +123,110 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "displayName": "Current",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "amp"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "voltage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "volt"
+              },
+              {
+                "id": "max",
+                "value": 40
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Voltage"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 2,
+        "x": 4,
+        "y": 1
+      },
+      "id": 9,
+      "options": {
+        "displayMode": "lcd",
+        "maxVizHeight": 300,
+        "minVizHeight": 75,
+        "minVizWidth": 226,
+        "namePlacement": "auto",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"repeater\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UIW\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-current\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+          "refId": "current"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"repeater\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UIW\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-voltage\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+          "refId": "voltage"
+        }
+      ],
+      "title": "Panels",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "palette-classic"
           },
           "custom": {
@@ -198,8 +302,8 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 20,
-        "x": 4,
+        "w": 18,
+        "x": 6,
         "y": 1
       },
       "id": 2,
@@ -317,7 +421,7 @@
       },
       "id": 4,
       "panels": [],
-      "title": "IR0UBN",
+      "title": "IR0UBN (Monte Genn'Argiolas)",
       "type": "row"
     },
     {
@@ -331,22 +435,18 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "max": 15,
+          "max": 25,
           "min": 5,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "yellow",
-                "value": 10
-              },
-              {
-                "color": "green",
-                "value": 12
+                "color": "red",
+                "value": 80
               }
             ]
           },
@@ -360,7 +460,7 @@
         "x": 0,
         "y": 12
       },
-      "id": 3,
+      "id": 6,
       "options": {
         "minVizHeight": 200,
         "minVizWidth": 200,
@@ -383,11 +483,11 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"battery-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")\n",
+          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")\n",
           "refId": "A"
         }
       ],
-      "title": "Battery",
+      "title": "Panels",
       "type": "gauge"
     },
     {
@@ -492,18 +592,22 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "max": 25,
+          "max": 15,
           "min": 5,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "green",
+                "value": 12
               }
             ]
           },
@@ -517,7 +621,7 @@
         "x": 0,
         "y": 18
       },
-      "id": 6,
+      "id": 3,
       "options": {
         "minVizHeight": 200,
         "minVizWidth": 200,
@@ -540,11 +644,11 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")\n",
+          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"battery-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")\n",
           "refId": "A"
         }
       ],
-      "title": "Panels",
+      "title": "Battery",
       "type": "gauge"
     }
   ],
