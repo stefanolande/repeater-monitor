@@ -40,10 +40,8 @@ class CommandsRoutesSpec extends CatsEffectSuite with MunitCirceComparison {
     new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
   }
 
-  private def ackDatagram(command: Command) = {
-    val bytes = Array('A'.byteValue()) ++ command.asBytes
-    new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost, 1234)
-  }
+  private def ackDatagram(command: Command) =
+    new DatagramPacket(command.asBytes, command.asBytes.length, InetAddress.getLocalHost, 1234)
 
   test("set-rtc route should report timeout reaching the monitoring system") {
     env { case (responseIO, _) =>
