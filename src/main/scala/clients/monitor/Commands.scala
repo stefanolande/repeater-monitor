@@ -18,6 +18,7 @@ object Commands {
       case _: ConfigSet  => 'C'.toByte
       case _: OutputRead => 'o'.toByte
       case _: OutputSet  => 'O'.toByte
+      case _: Meteo      => 'm'.toByte
     }
   }
 
@@ -54,4 +55,5 @@ object Commands {
 
   }
 
+  case class Meteo() extends Command
 }

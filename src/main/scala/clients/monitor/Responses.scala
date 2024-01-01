@@ -25,8 +25,7 @@ object Responses {
 
   case class Reset() extends Response
 
-  case class Telemetry(panelVoltage: Float, panelCurrent: Float, batteryVoltage: Float, batteryCurrent: Float, globalStatus: Boolean)
-      extends Response
+  case class Telemetry(panelVoltage: Float, panelCurrent: Float, batteryVoltage: Float, batteryCurrent: Float, globalStatus: Boolean) extends Response
   object Telemetry {
     def fromBytes(b: Array[Byte]): Option[Telemetry] =
       if (b.length == 17) {
@@ -67,6 +66,17 @@ object Responses {
         val status      = b(1) > 0
         Output(number, status).some
       } else None
+  }
 
+  case class Meteo(pressure: Float, temperature: Float)
+
+  object Meteo {
+    def fromBytes(b: Array[Byte]): Option[Meteo] =
+      if (b.length == 8) {
+        val pressure    = b.slice(0, 4).asFloat
+        val temperature = b.slice(4, 8).asFloat
+
+        (pressure, temperature).mapN(Meteo.apply)
+      } else None
   }
 }
