@@ -4,6 +4,7 @@ WORKDIR /repeater-monitor
 RUN sbt assembly
 
 FROM eclipse-temurin:17-jre
+RUN mkdir /app
 COPY --from=build repeater-monitor/target/scala-3.2.2/repeater-monitor.jar /app
 EXPOSE 8080
 WORKDIR /app
