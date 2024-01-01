@@ -34,7 +34,7 @@ object Responses {
         val panelCurrent   = b.slice(4, 8).asFloat
         val batteryVoltage = b.slice(8, 12).asFloat
         val batteryCurrent = b.slice(12, 16).asFloat
-        val globalStatus   = b(17) != 0
+        val globalStatus   = b(16) != 0
 
         (panelVoltage, panelCurrent, batteryVoltage, batteryCurrent, globalStatus.some).mapN(Telemetry.apply)
       } else None
