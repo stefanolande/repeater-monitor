@@ -43,16 +43,91 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "fixedColor": "red",
+            "mode": "fixed"
           },
           "mappings": [
             {
               "options": {
-                "off": {
+                "Alive": {
+                  "color": "green",
+                  "index": 1
+                },
+                "Not alive": {
+                  "color": "red",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "Not alive",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 2,
+        "x": 0,
+        "y": 1
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "import \"date\"\r\n\r\nfrom(bucket: \"repeater\")\r\n  |> range(start: -10m)\r\n  |> last()\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UIW\")\r\n  |> map(fn: (r) => ({ \r\n      status: if r._time > date.sub(d: 10m, from: now()) then \"Alive\" else \"Not alive\"\r\n  }))\r\n  |> yield(name: \"last\")\r\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Telemetry",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "OFF": {
                   "color": "red",
                   "index": 0
                 },
-                "on": {
+                "ON": {
                   "color": "green",
                   "index": 1
                 }
@@ -60,6 +135,7 @@
               "type": "value"
             }
           ],
+          "noValue": "-",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -78,11 +154,11 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 0,
+        "w": 2,
+        "x": 2,
         "y": 1
       },
-      "id": 7,
+      "id": 14,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -108,11 +184,12 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UIW\")\n  |> filter(fn: (r) => r[\"_field\"] == \"global-status\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> map(fn: (r) => ({ r with\n      _value: if r._value == true then \"ON\" else \"OFF\"\n  }))\n  |> yield(name: \"last\")\n",
+          "query": "from(bucket: \"repeater\")\n  |> range(start: 0)\n  |> last()\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UIW\")\n  |> filter(fn: (r) => r[\"_field\"] == \"global-status\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> map(fn: (r) => ({ r with\n      _value: if r._value == true then \"ON\" else \"OFF\"\n  }))\n  |> yield(name: \"last\")\n",
           "refId": "A"
         }
       ],
-      "title": "Status",
+      "title": "Master switch",
+      "transparent": true,
       "type": "stat"
     },
     {
@@ -123,10 +200,12 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "continuous-GrYlRd"
+            "fixedColor": "green",
+            "mode": "fixed"
           },
           "displayName": "Current",
           "mappings": [],
+          "noValue": "-",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -173,7 +252,7 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 2,
+        "w": 3,
         "x": 4,
         "y": 1
       },
@@ -217,6 +296,7 @@
         }
       ],
       "title": "Panels",
+      "transparent": true,
       "type": "bargauge"
     },
     {
@@ -237,8 +317,8 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -246,6 +326,9 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -261,7 +344,11 @@
               "mode": "off"
             }
           },
+          "decimals": 0,
+          "fieldMinMax": false,
           "mappings": [],
+          "max": 42,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -289,12 +376,15 @@
                 "value": "right"
               },
               {
-                "id": "custom.axisSoftMax",
-                "value": 40
+                "id": "custom.axisSoftMax"
               },
               {
                 "id": "unit",
                 "value": "amp"
+              },
+              {
+                "id": "max",
+                "value": 13
               }
             ]
           }
@@ -302,8 +392,8 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 18,
-        "x": 6,
+        "w": 17,
+        "x": 7,
         "y": 1
       },
       "id": 2,
@@ -338,7 +428,6 @@
           "refId": "Currents"
         }
       ],
-      "title": "IR0UIW",
       "type": "timeseries"
     },
     {
@@ -354,6 +443,7 @@
           "mappings": [],
           "max": 15,
           "min": 5,
+          "noValue": "-",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -432,49 +522,58 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "fixedColor": "red",
+            "mode": "fixed"
           },
-          "mappings": [],
-          "max": 25,
-          "min": 5,
+          "mappings": [
+            {
+              "options": {
+                "Alive": {
+                  "color": "green",
+                  "index": 1
+                },
+                "Not alive": {
+                  "color": "red",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "Not alive",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
-          },
-          "unit": "volt"
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
+        "h": 3,
+        "w": 2,
         "x": 0,
         "y": 12
       },
-      "id": 6,
+      "id": 15,
       "options": {
-        "minVizHeight": 200,
-        "minVizWidth": 200,
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
+          "fields": "/.*/",
           "values": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.2.3",
       "targets": [
@@ -483,12 +582,119 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")\n",
+          "query": "import \"date\"\r\n\r\nfrom(bucket: \"repeater\")\r\n  |> range(start: -10m)\r\n  |> last()\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\r\n  |> map(fn: (r) => ({ \r\n      status: if r._time > date.sub(d: 10m, from: now()) then \"Alive\" else \"Not alive\"\r\n  }))\r\n  |> yield(name: \"last\")\r\n",
           "refId": "A"
         }
       ],
+      "title": "Telemetry",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "displayName": "Current",
+          "mappings": [],
+          "noValue": "-",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "amp"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "voltage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "volt"
+              },
+              {
+                "id": "max",
+                "value": 25
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-RdYlGr"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Voltage"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 3,
+        "x": 4,
+        "y": 12
+      },
+      "id": 10,
+      "options": {
+        "displayMode": "lcd",
+        "maxVizHeight": 300,
+        "minVizHeight": 75,
+        "minVizWidth": 226,
+        "namePlacement": "auto",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"repeater\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-current\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")\r\n",
+          "refId": "current"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"repeater\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"panels-voltage\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+          "refId": "voltage"
+        }
+      ],
       "title": "Panels",
-      "type": "gauge"
+      "transparent": true,
+      "type": "bargauge"
     },
     {
       "datasource": {
@@ -508,8 +714,8 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -517,6 +723,9 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -532,7 +741,11 @@
               "mode": "off"
             }
           },
+          "decimals": 0,
+          "fieldMinMax": false,
           "mappings": [],
+          "max": 22,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -545,17 +758,38 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "volt"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Currents"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisSoftMax"
+              },
+              {
+                "id": "unit",
+                "value": "amp"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 12,
-        "w": 20,
-        "x": 4,
+        "h": 10,
+        "w": 17,
+        "x": 7,
         "y": 12
       },
-      "id": 1,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [],
@@ -574,11 +808,19 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"battery-voltage\" or r[\"_field\"] == \"panels-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")\n",
-          "refId": "A"
+          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"battery-voltage\" or r[\"_field\"] == \"panels-voltage\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")",
+          "refId": "Voltages"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"repeater\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"IR0UBN\")\n  |> filter(fn: (r) => r[\"_field\"] == \"battery-current\" or r[\"_field\"] == \"panels-current\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")",
+          "refId": "Currents"
         }
       ],
-      "title": "Trends",
       "type": "timeseries"
     },
     {
@@ -594,6 +836,7 @@
           "mappings": [],
           "max": 15,
           "min": 5,
+          "noValue": "-",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -603,7 +846,7 @@
               },
               {
                 "color": "yellow",
-                "value": 10
+                "value": 9
               },
               {
                 "color": "green",
@@ -616,10 +859,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 4,
         "x": 0,
-        "y": 18
+        "y": 15
       },
       "id": 3,
       "options": {
@@ -659,13 +902,13 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Repeaters",
-  "uid": "e241cf5f-74a1-41e7-899c-93dcd7573351",
-  "version": 2,
+  "title": "Repeaters (provisioned)",
+  "uid": "b6b9fc7f-edd1-4a09-8b01-0ff81311f60b",
+  "version": 30,
   "weekStart": ""
 }
