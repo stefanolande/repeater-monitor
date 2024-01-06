@@ -22,8 +22,8 @@ class MonitoringService(telemetryInterval: FiniteDuration, socketClient: Repeate
     for {
       res <- socketClient.send(Commands.Telemetry())
       _ <- res match
-        case Outcome.ACK(Responses.Telemetry(timestamp, panelVoltage, panelCurrent, batteryVoltage, batteryCurrent, globalStatus)) =>
-          influxService.saveMonitoring(timestamp, panelVoltage, panelCurrent, batteryVoltage, batteryCurrent, globalStatus)
+        case Outcome.ACK(Responses.Telemetry(panelVoltage, panelCurrent, batteryVoltage, batteryCurrent, globalStatus)) =>
+          influxService.saveMonitoring(panelVoltage, panelCurrent, batteryVoltage, batteryCurrent, globalStatus)
         case o => logger.error(s"Got unexpected response from monitor: $o")
       _ <- IO.sleep(telemetryInterval)
       _ <- monitor

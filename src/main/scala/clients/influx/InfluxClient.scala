@@ -31,26 +31,29 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
     } yield ()
 
   def saveMonitoring(
-      timestamp: Int,
       panelsVoltage: Float,
       panelsCurrent: Float,
       batteryVoltage: Float,
       batteryCurrent: Float,
       globalStatus: Boolean
   ): IO[Unit] =
-    val point = Point
-      .measurement(monitorCallsign)
-      .addField("panels-voltage", panelsVoltage)
-      .addField("panels-current", panelsCurrent)
-      .addField("battery-voltage", batteryVoltage)
-      .addField("battery-current", batteryCurrent)
-      .addField("global-status", globalStatus)
-      .time(timestamp, WritePrecision.S)
-    logger.debug(
-      s"[${Instant
-          .ofEpochSecond(timestamp)}] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
-    ) >>
-    IO.blocking(influxWriteAPI.writePoint(point))
+    for {
+      timestamp <- IO(Instant.now().toEpochMilli)
+      point =
+        Point
+          .measurement(monitorCallsign)
+          .addField("panels-voltage", panelsVoltage)
+          .addField("panels-current", panelsCurrent)
+          .addField("battery-voltage", batteryVoltage)
+          .addField("battery-current", batteryCurrent)
+          .addField("global-status", globalStatus)
+          .time(timestamp, WritePrecision.MS)
+      _ <- logger.debug(
+        s"[${Instant
+            .ofEpochSecond(timestamp)}] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
+      )
+      _ <- IO.blocking(influxWriteAPI.writePoint(point))
+    } yield ()
 
 }
 
