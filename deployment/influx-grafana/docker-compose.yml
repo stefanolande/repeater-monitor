@@ -3,7 +3,7 @@ services:
   influxdb:
     image: influxdb:latest
     env_file:
-      - .env
+      - .env-influxdb
     ports:
       - "8086:8086"
     volumes:
@@ -11,7 +11,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     env_file:
-      - .env
+      - .env-grafana
     ports:
       - "3000:3000"
     volumes:
