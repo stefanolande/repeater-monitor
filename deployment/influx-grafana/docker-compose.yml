@@ -1,28 +1,21 @@
-version: '2'
+version: "3.8"
 services:
   influxdb:
     image: influxdb:latest
+    env_file:
+      - .env
     ports:
-      - '8086:8086'
+      - "8086:8086"
     volumes:
-      - influxdb-storage:/var/lib/influxdb
-    environment:
-      - INFLUXDB_DB=db0
-      - INFLUXDB_ADMIN_USER=${INFLUXDB_USERNAME}
-      - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_PASSWORD}
+      - ./volumes/influxdb/data:/var/lib/influxdb
   grafana:
     image: grafana/grafana:latest
+    env_file:
+      - .env
     ports:
-      - '3000:3000'
+      - "3000:3000"
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - ./volumes/grafana/data:/var/lib/grafana
       - ./grafana-provisioning/:/etc/grafana/provisioning
     depends_on:
       - influxdb
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-volumes:
-  influxdb-storage:
-  chronograf-storage:
-  grafana-storage:
