@@ -22,20 +22,22 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
       batteryVoltage: Double,
       aprsPath: String,
       maybeTime: Option[Long] = None
-  ): IO[Unit] =
+  ): IO[Unit] = {
+    val time = maybeTime.getOrElse(Instant.now().toEpochMilli)
     for {
-      point <- IO {
-        val time = maybeTime.getOrElse(Instant.now().toEpochMilli)
+      point <- IO(
         Point
           .measurement(stationName)
           .addField("panels-voltage", panelsVoltage)
           .addField("battery-voltage", batteryVoltage)
           .addField("aprs-path", aprsPath)
           .time(time, WritePrecision.MS)
-      }
-      _ <- logger.debug(s"saving voltages $panelsVoltage and $batteryVoltage to influx")
+      )
+      _ <- logger.debug(s"${Instant
+          .ofEpochSecond(time)}] saving voltages $panelsVoltage and $batteryVoltage to influx")
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
+  }
 
   def saveMonitoring(
       panelsVoltage: Float,
@@ -65,10 +67,13 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
 }
 
 object InfluxClient {
-  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, monitorCallsign: String): Resource[IO, InfluxClient] =
+  def make(host: Hostname, port: Port, token: String, org: String, bucket: String, monitorCallsign: String): Resource[IO, InfluxClient] = {
+    val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
     for {
       influxClientFactory <- Resource
         .fromAutoCloseable(IO.blocking(InfluxDBClientFactory.create(s"http://${host.toString}:${port.value}", token.toCharArray, org, bucket)))
+      _        <- Resource.eval(logger.debug(s"connecting to server $host:$port with bucket $bucket"))
       writeApi <- Resource.eval(IO.blocking(influxClientFactory.makeWriteApi()))
     } yield InfluxClient(writeApi, monitorCallsign)
+  }
 }

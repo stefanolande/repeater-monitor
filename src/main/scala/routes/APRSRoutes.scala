@@ -22,13 +22,13 @@ object APRSRoutes {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  case class APRSImport(station: String)
+  case class APRSImport(station: String, start: Option[Long])
 
   def routes(APRSHistoryService: APRSHistoryService): HttpRoutes[IO] = HttpRoutes
     .of[IO] { case req @ POST -> Root / "aprs" / "import" =>
       val payloadIO = for {
         importParams <- req.as[APRSImport]
-        res          <- APRSHistoryService.importHistory(importParams.station, None)
+        res          <- APRSHistoryService.importHistory(importParams.station,  importParams.start)
       } yield res.asJson
       Ok(payloadIO)
     }
