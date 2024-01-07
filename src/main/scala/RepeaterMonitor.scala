@@ -10,9 +10,10 @@ import org.http4s.{HttpApp, HttpRoutes, Request, Response}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
-import routes.{CommandsRoutes, HealthRoutes}
-import services.{APRSService, CommandsService, MonitoringService}
+import routes.{APRSRoutes, CommandsRoutes, HealthRoutes}
+import services.{APRSHistoryService, APRSService, CommandsService, MonitoringService}
 import clients.monitor.RepeaterMonitorClient
+import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.server.middleware.CORS
 
 import java.net.{DatagramSocket, InetAddress}
@@ -29,7 +30,7 @@ object RepeaterMonitor extends IOApp {
   def run(args: List[String]): IO[ExitCode] = configIO.flatMap { conf =>
     val resources =
       for {
-        influxService <- InfluxClient.make(
+        influxClient <- InfluxClient.make(
           conf.influx.host,
           conf.influx.port,
           conf.influx.token,
@@ -38,11 +39,12 @@ object RepeaterMonitor extends IOApp {
           conf.monitor.stationName
         )
         socketClient <- RepeaterMonitorClient.make(InetAddress.getByName(conf.monitor.ip), conf.monitor.port, conf.monitor.responseTimeout.seconds)
-        commandsService   = new CommandsService(socketClient)
-        httpApp           = makeHttpApp(commandsService)
-        monitoringService = MonitoringService(conf.monitor.telemetryInterval.minutes, socketClient, influxService)
+        commandsService = new CommandsService(socketClient)
+        aprsHistoryService <- APRSHistoryService.make(conf.aprs.stations, influxClient)
+        httpApp           = makeHttpApp(commandsService, aprsHistoryService)
+        monitoringService = MonitoringService(conf.monitor.telemetryInterval.minutes, socketClient, influxClient)
         server <- server(httpApp)
-      } yield (influxService, monitoringService, server)
+      } yield (influxClient, monitoringService, server)
 
     resources.use { case (influxService, monitoringService, server) =>
       APRSService.run(conf.aprs, influxService) &>
@@ -52,11 +54,11 @@ object RepeaterMonitor extends IOApp {
     }
   }
 
-  private def makeHttpApp(commandService: CommandsService): HttpApp[IO] = {
+  private def makeHttpApp(commandService: CommandsService, aprsHistoryService: APRSHistoryService): HttpApp[IO] = {
     val dsl = new Http4sDsl[IO] {}
     import dsl.*
 
-    val routes = CommandsRoutes.routes(commandService) <+> HealthRoutes.routes
+    val routes = CommandsRoutes.routes(commandService) <+> HealthRoutes.routes <+> APRSRoutes.routes(aprsHistoryService)
     routes.orNotFound
   }
 

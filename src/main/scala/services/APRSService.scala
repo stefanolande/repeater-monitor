@@ -6,7 +6,7 @@ import cats.syntax.all.*
 import clients.influx.InfluxClient
 import com.comcast.ip4s.*
 import fs2.io.net.{Network, Socket}
-import fs2.{Chunk, Stream, text}
+import fs2.{text, Chunk, Stream}
 import model.aprs.APRSTelemetry
 import model.configuration.{APRSConfiguration, Station}
 import org.typelevel.log4cats.StructuredLogger
@@ -70,7 +70,7 @@ object APRSService {
       else IO.raiseError(LoginFailed)
     )
 
-  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station, influxService: InfluxClient): IO[Unit] =
+  private def runClient(connectionCallsign: String, host: Hostname, port: Port, station: Station, influxClient: InfluxClient): IO[Unit] =
     Network[IO]
       .client(SocketAddress(host, port))
       .onFinalize(logger.info(s"Releasing APRS-IS socket for ${station.callsign}"))
@@ -82,11 +82,7 @@ object APRSService {
           APRSTelemetry.parse(message) match
             case Some(t) =>
               logger.debug(s"Got telemetry: $t".trim) >>
-              (for {
-                panelsVoltage  <- t.values.get(station.panelsIndex)
-                batteryVoltage <- t.values.get(station.batteryIndex)
-                res = influxService.saveAPRS(station.callsign, panelsVoltage, batteryVoltage, t.path)
-              } yield res).getOrElse(IO.unit)
+              t.saveIfValid(station, influxClient)
             case None => logger.debug(s"Got message: $message".trim)
         }
       }
@@ -95,6 +91,6 @@ object APRSService {
         case e =>
           logger.error(s"Error ${e.getMessage}, waiting") >>
           IO.sleep(10.seconds)
-          >> runClient(connectionCallsign, host, port, station, influxService)
+          >> runClient(connectionCallsign, host, port, station, influxClient)
       }
 }

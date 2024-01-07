@@ -16,16 +16,23 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
 
   private val logger: StructuredLogger[IO] = Slf4jLogger.getLogger
 
-  def saveAPRS(stationName: String, panelsVoltage: Double, batteryVoltage: Double, aprsPath: String): IO[Unit] =
+  def saveAPRS(
+      stationName: String,
+      panelsVoltage: Double,
+      batteryVoltage: Double,
+      aprsPath: String,
+      maybeTime: Option[Long] = None
+  ): IO[Unit] =
     for {
-      point <- IO(
+      point <- IO {
+        val time = maybeTime.getOrElse(Instant.now().toEpochMilli)
         Point
           .measurement(stationName)
           .addField("panels-voltage", panelsVoltage)
           .addField("battery-voltage", batteryVoltage)
           .addField("aprs-path", aprsPath)
-          .time(Instant.now().toEpochMilli, WritePrecision.MS)
-      )
+          .time(time, WritePrecision.MS)
+      }
       _ <- logger.debug(s"saving voltages $panelsVoltage and $batteryVoltage to influx")
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
