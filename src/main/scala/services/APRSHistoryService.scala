@@ -42,7 +42,7 @@ class APRSHistoryService(stations: List[Station], client: Client[IO], influxClie
 //                .parEvalMapUnordered(1)(_.saveIfValid(station, influxClient))
 //                .compile
 //                .lastOrError
-              aprsList.map(_.saveIfValid(station, influxClient) >> IO.sleep(1.seconds)).parSequence
+              aprsList.map(_.saveIfValid(station, influxClient) >> IO.sleep(1.seconds)).sequence_
             } else IO.unit
           recursionF =
             if (failures < 100) {
