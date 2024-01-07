@@ -22,22 +22,21 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
       batteryVoltage: Double,
       aprsPath: String,
       maybeTime: Option[Long] = None
-  ): IO[Unit] = {
-    val time = maybeTime.getOrElse(Instant.now().toEpochMilli)
+  ): IO[Unit] =
     for {
+      timestamp <- IO(maybeTime.getOrElse(Instant.now().toEpochMilli))
       point <- IO(
         Point
           .measurement(stationName)
           .addField("panels-voltage", panelsVoltage)
           .addField("battery-voltage", batteryVoltage)
           .addField("aprs-path", aprsPath)
-          .time(time, WritePrecision.MS)
+          .time(timestamp, WritePrecision.MS)
       )
-      _ <- logger.debug(s"${Instant
-          .ofEpochSecond(time)}] saving voltages $panelsVoltage and $batteryVoltage to influx")
+      _ <- logger.debug(s"[${Instant
+          .ofEpochSecond(timestamp)}] saving voltages $panelsVoltage and $batteryVoltage to influx")
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()
-  }
 
   def saveMonitoring(
       panelsVoltage: Float,
@@ -47,7 +46,8 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
       globalStatus: Boolean
   ): IO[Unit] =
     for {
-      timestamp <- IO(Instant.now().toEpochMilli)
+      now       <- IO(Instant.now())
+      timestamp <- IO(now.toEpochMilli)
       point =
         Point
           .measurement(monitorCallsign)
@@ -58,8 +58,7 @@ class InfluxClient(influxWriteAPI: WriteApi, monitorCallsign: String) {
           .addField("global-status", globalStatus)
           .time(timestamp, WritePrecision.MS)
       _ <- logger.debug(
-        s"[${Instant
-            .ofEpochSecond(timestamp)}] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
+        s"[$now] saving panels voltage $panelsVoltage V $panelsCurrent A - battery $batteryVoltage V $batteryCurrent A - global status $globalStatus to influx"
       )
       _ <- IO.blocking(influxWriteAPI.writePoint(point))
     } yield ()

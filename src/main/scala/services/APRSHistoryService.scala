@@ -14,6 +14,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import services.APRSHistoryService.parseHtml
 
 import java.time.{Duration, LocalDateTime}
+import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 class APRSHistoryService(stations: List[Station], client: Client[IO], influxClient: InfluxClient) {
@@ -36,11 +37,12 @@ class APRSHistoryService(stations: List[Station], client: Client[IO], influxClie
           aprsList = aprsStringLines.flatMap(APRSTelemetry.parse)
           saveF =
             if (aprsList.nonEmpty) {
-              Stream
-                .emits(aprsList)
-                .parEvalMapUnordered(10)(_.saveIfValid(station, influxClient))
-                .compile
-                .lastOrError
+//              Stream
+//                .emits(aprsList)
+//                .parEvalMapUnordered(1)(_.saveIfValid(station, influxClient))
+//                .compile
+//                .lastOrError
+              aprsList.map(_.saveIfValid(station, influxClient) >> IO.sleep(1.seconds)).parSequence
             } else IO.unit
           recursionF =
             if (failures < 100) {
@@ -50,7 +52,7 @@ class APRSHistoryService(stations: List[Station], client: Client[IO], influxClie
               logger.debug(s"exiting after $failures attempts") >>
               IO.unit
             }
-          _ <- saveF &> recursionF
+          _ <- saveF >> recursionF
         } yield ()
     }
 
