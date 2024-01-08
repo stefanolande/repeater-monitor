@@ -16,7 +16,7 @@ case class APRSTelemetry(path: String, sequence: Int, values: NonEmptyList[Doubl
     (for {
       panelsVoltage  <- values.get(station.panelsIndex)
       batteryVoltage <- values.get(station.batteryIndex)
-      res = influxClient.saveAPRS(station.callsign, panelsVoltage, batteryVoltage, path, timestamp.map(_.toEpochSecond(ZoneOffset.UTC)))
+      res = influxClient.saveAPRS(station.callsign, panelsVoltage, batteryVoltage, path, timestamp.map(_.toEpochSecond(ZoneOffset.UTC) * 1000))
     } yield res).getOrElse(IO.unit)
 }
 
