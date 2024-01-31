@@ -17,6 +17,7 @@ import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.server.middleware.CORS
 
 import java.net.{DatagramSocket, InetAddress}
+import java.security.Security
 import scala.concurrent.duration.*
 
 object RepeaterMonitor extends IOApp {
@@ -47,6 +48,7 @@ object RepeaterMonitor extends IOApp {
       } yield (influxClient, monitoringService, server)
 
     resources.use { case (influxService, monitoringService, server) =>
+      Security.setProperty("networkaddress.cache.ttl", "0")
       APRSService.run(conf.aprs, influxService) &>
       monitoringService.monitor &>
       logger.info(s"Server Has Started at ${server.address}") >>
