@@ -4,7 +4,6 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clients.influx.InfluxClient
-import fs2.Stream
 import model.aprs.APRSTelemetry
 import model.configuration.Station
 import org.http4s.client.Client
@@ -13,8 +12,6 @@ import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import services.APRSHistoryService.parseHtml
 
-import java.time.{Duration, LocalDateTime}
-import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 class APRSHistoryService(stations: List[Station], client: Client[IO], influxClient: InfluxClient) {

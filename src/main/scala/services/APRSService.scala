@@ -1,12 +1,11 @@
 package services
 
-import cats.data.OptionT
-import cats.effect.{IO, IOApp, MonadCancelThrow}
+import cats.effect.IO
 import cats.syntax.all.*
 import clients.influx.InfluxClient
 import com.comcast.ip4s.*
 import fs2.io.net.{Network, Socket}
-import fs2.{text, Chunk, Stream}
+import fs2.{Stream, text}
 import model.aprs.APRSTelemetry
 import model.configuration.{APRSConfiguration, Station}
 import org.typelevel.log4cats.StructuredLogger

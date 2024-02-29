@@ -1,6 +1,7 @@
 package routes
 
 import cats.effect.IO
+import clients.monitor.ConfigParam.given_Encoder_ConfigParam
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.http4s.HttpRoutes
@@ -11,10 +12,9 @@ import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import routes.payloads.APIResponse.toResponse
 import routes.payloads.Config.*
+import routes.payloads.ConfigParam.given_Decoder_ConfigParam
 import routes.payloads.{Config, Output, Voltages}
 import services.CommandsService
-import clients.monitor.ConfigParam.given_Encoder_ConfigParam
-import routes.payloads.ConfigParam.given_Decoder_ConfigParam
 
 object CommandsRoutes {
   private val dsl = new Http4sDsl[IO] {}

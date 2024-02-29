@@ -1,22 +1,21 @@
 import cats.data.Kleisli
 import cats.effect.*
-import cats.implicits.{showInterpolator, toSemigroupKOps}
+import cats.implicits.toSemigroupKOps
 import clients.influx.InfluxClient
+import clients.monitor.RepeaterMonitorClient
 import com.comcast.ip4s.{host, port}
 import model.configuration.Configuration
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
-import org.http4s.{HttpApp, HttpRoutes, Request, Response}
+import org.http4s.server.middleware.CORS
+import org.http4s.{HttpApp, Response}
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import routes.{APRSRoutes, CommandsRoutes, HealthRoutes}
 import services.{APRSHistoryService, APRSService, CommandsService, MonitoringService}
-import clients.monitor.RepeaterMonitorClient
-import org.http4s.ember.client.EmberClientBuilder
-import org.http4s.server.middleware.CORS
 
-import java.net.{DatagramSocket, InetAddress}
+import java.net.InetAddress
 import java.security.Security
 import scala.concurrent.duration.*
 
@@ -58,7 +57,6 @@ object RepeaterMonitor extends IOApp {
 
   private def makeHttpApp(commandService: CommandsService, aprsHistoryService: APRSHistoryService): HttpApp[IO] = {
     val dsl = new Http4sDsl[IO] {}
-    import dsl.*
 
     val routes = CommandsRoutes.routes(commandService) <+> HealthRoutes.routes <+> APRSRoutes.routes(aprsHistoryService)
     routes.orNotFound
