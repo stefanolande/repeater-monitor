@@ -38,7 +38,7 @@ object RepeaterMonitor extends IOApp {
           conf.influx.bucket,
           conf.monitor.stationName
         )
-        socketClient <- RepeaterMonitorClient.make(InetAddress.getByName(conf.monitor.ip), conf.monitor.port, conf.monitor.responseTimeout.seconds)
+        socketClient <- RepeaterMonitorClient.make(conf.monitor.ip, conf.monitor.port, conf.monitor.responseTimeout.seconds)
         commandsService = new CommandsService(socketClient)
         aprsHistoryService <- APRSHistoryService.make(conf.aprs.stations, influxClient)
         httpApp           = makeHttpApp(commandsService, aprsHistoryService)
